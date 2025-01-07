@@ -52,13 +52,13 @@ namespace IngeBot
                 if (File.Exists(dirs[i] + "/save/logchannel.txt"))
                 {
                     string[] lines = File.ReadAllLines(dirs[i] + "/save/logchannel.txt");
-                    Stats.logChannels.Add(ulong.Parse(dirs[i].Split("\\")[1]), ulong.Parse(lines[0]));
+                    Stats.logChannels.Add(ulong.Parse(dirs[i].Split(new char[] { '\\', '/' })[1]), ulong.Parse(lines[0]));
                 }
 
                 if (File.Exists(dirs[i] + "/save/welcomechannel.txt"))
                 {
                     string[] lines = File.ReadAllLines(dirs[i] + "/save/welcomechannel.txt");
-                    Stats.welcomeChannels.Add(ulong.Parse(dirs[i].Split("\\")[1]), ulong.Parse(lines[0]));
+                    Stats.welcomeChannels.Add(ulong.Parse(dirs[i].Split(new char[] { '\\', '/' })[1]), ulong.Parse(lines[0]));
                 }
 
             }
