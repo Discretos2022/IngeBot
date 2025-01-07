@@ -1,0 +1,964 @@
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
+using IngeBot;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using static System.Net.Mime.MediaTypeNames;
+using System.Xml.Linq;
+using System.Threading.Channels;
+using System.Security.Cryptography;
+using DSharpPlus.Exceptions;
+
+namespace Bot.Modules
+{
+    public class Commands : BaseCommandModule
+    {
+
+        [Command("helloTest")]
+        public async Task PingAsync(CommandContext ctx)
+        {
+            await ctx.Channel.SendMessageAsync("Salut ! Je suis le bot de Discretos !  (Pour plus d'informations, voir avec le développeur)");
+        }
+
+    }
+
+    public class SlashCommands : ApplicationCommandModule
+    {
+
+        public string ArrayReverseString(string stringToReverse)
+        {
+            var charArray = stringToReverse.ToCharArray();
+            Array.Reverse(charArray);
+            return new string(charArray);
+        }
+
+        [SlashCommand("hello", "Le test...")]
+        public async Task Ping2Async(InteractionContext ctx)
+        {
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Yellow,
+                Title = "IngéBot est opérationnel !",
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Salut ! Je suis IngéBot !  (Pour plus d'informations, voir avec Joshua)").AddEmbed(message));
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("ID :" + ctx.Channel.Id));
+
+            Console.WriteLine(ctx.Channel.Id);
+            //await ctx.Channel.SendMessageAsync(embed: message);
+        }
+
+        /*[SlashCommand("sum", "Verifier une simple addition.")]
+        public async Task ParamTestAsync(InteractionContext ctx, [Option("num1", "le 1er numéro")] string param, [Option("num2", "le 2e numéro")] string param2)
+        {
+            int num = int.Parse(param) + int.Parse(param2);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Result : " + num));
+
+        }*/
+
+        [SlashCommand("info", "Information concernant le Bot !")]
+        public async Task InfoAsync(InteractionContext ctx)
+        {
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Alors..."));
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Yellow,
+                Title = "Information : ",
+                Description = "IngéBot ver 1.0 beta ______ Copyright (c) 2024 SIEDEL Joshua _______ IP : Tu croyais que j'allais vraiment mettre l'adresse ip !",
+
+            };
+
+            await ctx.Channel.SendMessageAsync(embed: message);
+
+        }
+
+        /*[SlashCommand("devine", "J'essaye de deviner ta personnalité... (ça marche pas bien :) )")]
+        public async Task DevineurAsync(InteractionContext ctx)
+        {
+            int num = new Random().Next(10 + 1);
+            string per = "";
+
+            switch (num)
+            {
+                case 0: per = "Sympa"; break;
+                case 1: per = "Hipocrite"; break;
+                case 2: per = "Abruti"; break;
+                case 3: per = "Intello"; break;
+                case 4: per = "Je sais pas"; break;
+                case 5: per = "..."; break;
+
+                case 6: per = "Puant"; break;
+                case 7: per = "Gentil"; break;
+                case 8: per = "J'ai pas le droit de le dire."; break;
+                case 9: per = "Patate"; break;
+                case 10: per = "Haaaaaaa !"; break;
+
+            }
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Alors..."));
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Yellow,
+                Title = "Vous êtes : " + per,
+                Description = "Ceci n'est pas forcément vrai ! (Les personnalités sont choisit selon le Random())",
+            };
+
+            await ctx.Channel.SendMessageAsync(embed: message);
+        }*/
+
+
+
+
+        /*[SlashCommand("db", "Un convertisseur decimal à binaire !")]
+        public async Task DecToBinAsync(InteractionContext ctx, [Option("decimal", "decimal à binariser")] string param)
+        {
+            int div = int.Parse(param);
+            string result = "";
+            int bit = 0;
+
+            while (div >= 1)
+            {
+                result += (div % 2).ToString();
+                div /= 2;
+                bit += 1;
+                if (bit == 4) { result += " "; bit = 0; }
+            }
+
+            result = result.Trim();
+            result = ArrayReverseString(result);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(param + " = " + result.ToString()));
+        }*/
+
+        /*[SlashCommand("bd", "Un convertisseur binaire à decimal !")]
+        public async Task BinToDecAsync(InteractionContext ctx, [Option("binaire", "binaire à décimaliser")] string param)
+        {
+
+            int result = 0;
+            string num = ArrayReverseString(param);
+            int puissance = 0;
+
+            for (int i = 0; i < num.Length; i++)
+            {
+                char b = num.ToCharArray()[i];
+                if (b == '1') { result += (int)Math.Pow(2, puissance); puissance += 1; }
+                if (b == '0') { puissance += 1; }
+            }
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(param + " = " + result));
+        }*/
+
+
+        /*[SlashCommand("setRole", "Une commande pour ajouter des permissions à un utilisateur.")]
+        public async Task SetRoleAsync(InteractionContext ctx, [Option("user", "Utilisateur à modifier")] DiscordUser user, [Option("role", "role à effecter")] DiscordRole role)
+        {
+
+            if (ctx.User.Username == "discretos")
+            {
+                await ctx.Guild.GetMemberAsync(user.Id).Result.GrantRoleAsync(role);
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("L'utilisateur " + user.Mention + " à maintenant le role : " + role.Mention));
+            }
+            else
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Vous n'avez pas les droits pour éxécuter cette commande ! HA HA HA"));
+
+        }*/
+
+        /*[SlashCommand("revokerole", "Une commande pour enlever un role à un utilisateur.")]
+        public async Task RevokeRoleAsync(InteractionContext ctx, [Option("user", "Utilisateur à modifier")] DiscordUser user, [Option("role", "role à enlever")] DiscordRole role)
+        {
+
+            if (ctx.User.Username == "discretos")
+            {
+                await ctx.Guild.GetMemberAsync(user.Id).Result.RevokeRoleAsync(role);
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("L'utilisateur " + user.Mention + " n'a plus le role : " + role.Mention));
+            }
+            else
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Vous n'avez pas les droits pour éxécuter cette commande !"));
+
+        }*/
+
+        /*[SlashCommand("expulse", "Une commande pour expulser un utilisateur.")]
+        public async Task ExpluseAsync(InteractionContext ctx, [Option("user", "Utilisateur à expulser")] DiscordUser user, [Option("raison", "Raidon de l'expulsion")] string reason)
+        {
+
+            if (ctx.User.Username == "discretos")
+            {
+                await ctx.Guild.GetMemberAsync(user.Id).Result.RemoveAsync();
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("L'utilisateur " + user.Mention + " a été expulsé par " + ctx.Member.Mention + " ! Raison : " + reason));
+            }
+            else
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Vous n'avez pas les droits pour éxécuter cette commande !"));
+
+        }*/
+
+
+        /*[SlashCommand("img", "Une image...")]
+        public async Task ImageAsync(InteractionContext ctx)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Je cherche dans la base de données..."));
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Aquamarine,
+                Title = "Une image",
+                ImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/ISO_C%2B%2B_Logo.svg/1822px-ISO_C%2B%2B_Logo.svg.png",
+            };
+
+            await ctx.Channel.SendMessageAsync(embed: message);
+
+        }*/
+
+        /*[SlashCommand("ip", "L'adresse IP du server qui héberge le bot.")]
+        public async Task GetIPAsync(InteractionContext ctx)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Je cherche dans la base de données..."));
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Aquamarine,
+                Description = "Public IP : " + SearchPublicIP() + " ",
+            };
+
+            Console.WriteLine(message.Description);
+
+            await ctx.Channel.SendMessageAsync(embed: message);
+
+        }*/
+
+        public static string SearchPublicIP()
+        {
+            try
+            {
+                String direction = "";
+                HttpWebRequest request = HttpWebRequest.CreateHttp("http://checkip.dyndns.org/");
+                using (WebResponse response = request.GetResponse())
+                {
+                    using (StreamReader stream = new StreamReader(response.GetResponseStream()))
+                    {
+                        direction = stream.ReadToEnd();
+                    }
+                }
+                //Search for the ip in the html
+                int first = direction.IndexOf("Address: ") + 9;
+                int last = direction.LastIndexOf("");
+                direction = direction.Substring(first, last - first - 15);
+                return direction;
+            }
+            catch (Exception ex)
+            {
+                return "127.0.0.1";
+            }
+        }
+
+
+        /*[SlashCommand("savetext", "Une commande pour enregistrer du text.")]
+        public async Task SaveText(InteractionContext ctx, [Option("Titre", "Titre du text")] string titre, [Option("Text", "Texte à enregistrer")] string text)
+        {
+
+            Directory.CreateDirectory("Data/" + ctx.User.Username);
+
+            StreamWriter outputFile = new StreamWriter("Data/" + ctx.User.Username + "/" + titre + ".txt");
+            outputFile.WriteLine(text);
+            outputFile.Close();
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le text a été enregistrer !"));
+
+        }*/
+
+        /*[SlashCommand("enumtext", "Une commande pour énumérer ses texts.")]
+        public async Task EnumText(InteractionContext ctx)
+        {
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Je cherche dans la base de données..."));
+
+            string file = "";
+            if (!Directory.Exists("Data/" + ctx.User.Username))
+                file = "Vous n'avez pas enregistrer de text !";
+            else
+            {
+                var dirs = Directory.GetFiles("Data/" + ctx.User.Username);
+
+                for (int i = 0; i < dirs.Length; i++)
+                {
+                    file += "- " + dirs[i].Substring(("Data/" + ctx.User.Username).Length + 1) + "\n";
+                }
+            }
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Aquamarine,
+                Description = file,
+            };
+
+            await ctx.Channel.SendMessageAsync(embed: message);
+
+        }
+
+        [SlashCommand("gettext", "Une commande pour récupérer un text.")]
+        public async Task GetText(InteractionContext ctx, [Option("Titre", "Titre du text à récupérer")] string titre)
+        {
+
+            Console.WriteLine("Guild : " + ctx.Guild);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Je cherche dans la base de données..."));
+
+            string file;
+            if (!Directory.Exists("Data/" + ctx.User.Username))
+                file = "Vous n'avez pas enregistrer de text !";
+            else if (!File.Exists("Data/" + ctx.User.Username + "\\" + titre + ".txt"))
+                file = $"Ce text \"{titre}\" n'existe pas !";
+            else
+            {
+
+                StreamReader r = new StreamReader("Data/" + ctx.User.Username + "/" + titre + ".txt");
+                file = r.ReadToEnd();
+                r.Close();
+
+            }
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.SpringGreen,
+                Description = file,
+            };
+
+            await ctx.Channel.SendMessageAsync(embed: message);
+
+        }*/
+
+
+        /*[SlashCommand("getfile", "Une commande pour recevoir un fichier .txt")]
+        public async Task SendFileTest(InteractionContext ctx)
+        {
+
+            var fs = new FileStream("Files/test.exe", FileMode.Open, FileAccess.Read);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Siedel Software :").AddFile("test.exe", fs));
+
+            fs.Close();
+
+        }*/
+        
+        [SlashCommand("addevent", "Une commande pour ajouter des évenements. (admin)")]
+        public async Task SendAddEvent(InteractionContext ctx, [Option("Titre", "Titre de l'évenement")] string titre, [Option("Date", "Date de l'évenement")] string date)
+        {
+            if (ctx.User.Username != "discretos")
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            if (!Directory.Exists("EventData"))
+                Directory.CreateDirectory("EventData");
+
+            File.CreateText("EventData/" + titre + ".txt");
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("L'évenement " + titre + " à été créé ! Date : " + date));
+            return;
+
+        }
+
+
+        [SlashCommand("event", "Une commande pour afficher les events en cours.")]
+        public async Task SendEvent(InteractionContext ctx)
+        {
+
+            if (!Directory.Exists("EventData"))
+            {
+                Directory.CreateDirectory("EventData");
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Il n'y a pas d'évenement en cours !"));
+                return;
+            }
+            else
+            {
+                var dirs = Directory.GetFiles("EventData/");
+
+                if (dirs.Length == 0)
+                {
+                    await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Il n'y a pas d'évenement en cours !"));
+                    return;
+                }
+                else
+                {
+                    var chain = new DiscordEmbedBuilder
+                    {
+                        Color = DiscordColor.SpringGreen,
+                        Description = dirs[0],
+                    };
+
+                    var mess = new DiscordInteractionResponseBuilder().WithContent("Voici les évenements : " + " \n" + "(Si vous voyez des erreurs ou des bugs, prévenez nous !)").AddEmbed(chain);
+
+                    for (int i = 1; i < dirs.Length; i++)
+                    {
+                        var message = new DiscordEmbedBuilder
+                        {
+                            Color = DiscordColor.SpringGreen,
+                            Description = dirs[i],
+                        };
+                        mess.AddEmbed(message);
+                    }
+
+                    await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, mess);
+                    return;
+                }
+
+            }
+
+        }
+
+
+        [SlashCommand("flyer", "Un flyer...")]
+        public async Task ImageAsync(InteractionContext ctx)
+        {
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(ctx.Guild.Name + " : " + ctx.Guild.Id));
+
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Envoie en cours..."));
+            var fs = new FileStream("Data/1156894161761476648/res/flyer945x540.png", FileMode.Open, FileAccess.Read);
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("flyer945x540.png").AddFile(fs));
+
+            fs.Close();
+        }
+
+
+        [SlashCommand("moderation", "Fonction de modération (true/false)")]
+        public async Task EnableModerationAsync(InteractionContext ctx, [Option("activer", "true or false")] string response)
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            /// TODO : ???
+
+            if (response == "true")
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le système de modération a été activé !"));
+            else if (response == "false")
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le système de modération a été désactivé !"));
+            else
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La commande n'est pas valide !"));
+
+        }
+
+
+        [SlashCommand("setbotgame", "Une commande pour le jeu auquel le bot joue. (admin)")]
+        public async Task SetBotGame(InteractionContext ctx)
+        {
+
+            /*if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            Stats.botGame = game;
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le jeu va être mis à jour avec : " + game));
+            */
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            var modal = new DiscordInteractionResponseBuilder().WithTitle("Set Bot Game").WithCustomId("modal_bot_game").AddComponents(new TextInputComponent("Nom du jeu : ", "id", "Entre Le nom d'un jeu"));
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1).AddComponents(b2).AddComponents(b3));
+
+
+        }
+
+
+        [SlashCommand("welcome", "Une commande pour dire BIENVENU ! (admin)")]
+        public async Task Welcome(InteractionContext ctx)
+        {
+
+            /*if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
+            DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
+            DiscordButtonComponent b3 = new DiscordButtonComponent(ButtonStyle.Primary, "???", "???", true);
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
+                Color = DiscordColor.Violet,
+                Description = "Pourquoi êtes-vous ici ?",
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2, b3));
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1, b2, b3));
+            */
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Success, "accept_rules", "Accepter", false);
+            DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Danger, "no_accept_rules", "Refuser", false);
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
+                Color = DiscordColor.Violet,
+                Description = "**Veuillez lire et accepter les règles du serveur**" +
+                " \n - Ne pas insulter " +
+                " \n - Être respectueux les uns envers les autres " +
+                " \n - La publicité doit etre permise au préalable par l'un des membres du comité" + 
+                " \n - Restez courtois et respectueux" +
+                " \n - Si le bot a des bugs, dites le nous !"
+            };
+
+
+            DiscordChannel channel = ctx.Guild.GetDefaultChannel();
+            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
+                channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
+
+            await channel.SendMessageAsync("L'utilisateur " + ctx.User.Username + " a utilisé la commande /welcome");
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2));
+
+        }
+
+
+        [SlashCommand("addrole", "Une commande pour ajouter un rôle ! (admin)")]
+        public async Task AddRole(InteractionContext ctx)
+        {
+
+            for(int i = 0; i < ctx.Guild.Roles.Count; i++)
+            {
+                Console.WriteLine(ctx.Guild.Roles.ElementAt(i).Value);
+            }
+
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Success, "valid", "Valider", false);
+            DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Success, "seldate", "Date", false);
+
+            if(Stats.mess_role_id != 0)
+            {
+                try
+                {
+                    await ctx.Interaction.Channel.GetMessageAsync(Stats.mess_role_id).Result.DeleteAsync();
+                }
+                catch(NotFoundException e) { }
+
+            }
+
+            var message = new DiscordInteractionResponseBuilder().WithTitle("Ajouter un rôle à un utilisateur").AddComponents(new DiscordRoleSelectComponent("roles", "Roles")).AddComponents(new DiscordUserSelectComponent("user", "Utilisateur")).AddComponents(b1, b2);     //  .AddComponents(new DiscordChannelSelectComponent("123", "1234"));
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
+
+            Stats.mess_role_id = ctx.GetOriginalResponseAsync().Result.Id;
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1).AddComponents(b2).AddComponents(b3));
+
+        }
+
+
+        [SlashCommand("setchannellog", "Une commande pour définir un salon comme log ! (admin)")]
+        public async Task SetChannelLog(InteractionContext ctx)
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
+                Stats.logChannels.Remove(ctx.Guild.Id);
+
+            Stats.logChannels.Add(ctx.Guild.Id, ctx.Channel.Id);
+
+
+            var message = new DiscordInteractionResponseBuilder().WithContent("Le salon pour les logs viens d'être défini dans : " + ctx.Channel.Mention);
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
+
+
+            Directory.CreateDirectory("Data/" + ctx.Guild.Id);
+            string fileName = "Data/" + ctx.Guild.Id + "/save/logchannel.txt";
+
+            FileStream stream = File.OpenWrite(fileName);
+            StreamWriter file = new StreamWriter(stream);
+
+            file.WriteLine(ctx.Channel.Id);
+            file.Close();
+
+
+            DiscordChannel channel = ctx.Guild.GetDefaultChannel();
+            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
+                channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
+
+            await channel.SendMessageAsync("Le salon de log a été défini dans " + channel.Name + " par " + ctx.User.Username + ".");
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1).AddComponents(b2).AddComponents(b3));
+
+        }
+
+        [SlashCommand("setwelcomechannel", "Une commande pour définir un salon comme salon de bienvenu ! (admin)")]
+        public async Task SetWelcomeChannel(InteractionContext ctx)
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            if (Stats.welcomeChannels.ContainsKey(ctx.Guild.Id))
+                Stats.welcomeChannels.Remove(ctx.Guild.Id);
+
+            Stats.welcomeChannels.Add(ctx.Guild.Id, ctx.Channel.Id);
+
+            var message = new DiscordInteractionResponseBuilder().WithContent("Le salon pour les bienvenus viens d'être défini dans : " + ctx.Channel.Mention);
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
+
+
+            Directory.CreateDirectory("Data/" + ctx.Guild.Id);
+            string fileName = "Data/" + ctx.Guild.Id + "/save/welcomechannel.txt";
+
+            FileStream stream = File.OpenWrite(fileName);
+            StreamWriter file = new StreamWriter(stream);
+
+            file.WriteLine(ctx.Channel.Id);
+            file.Close();
+
+            DiscordChannel channel = ctx.Guild.GetDefaultChannel();
+            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
+                channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
+
+            await channel.SendMessageAsync("Le salon de bienvenu a été défini dans " + channel.Name + " par " + ctx.User.Username + ".");
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1).AddComponents(b2).AddComponents(b3));
+
+        }
+
+
+
+        [SlashCommand("demineur", "Une commande pour créer une partie de démineur !")]
+        public async Task CreateDemineur(InteractionContext ctx, [Choice("Facile", "Facile")][Choice("Moyen", "Moyen")][Choice("Difficile", "Difficile")][Option("Difficulté", "Difficulté")] string response)
+        {
+
+
+            if (ctx.User.Username != "discretos")
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            Console.WriteLine(response);
+
+            int s = 6;
+            int mines = 6;
+
+            if (response == "Moyen")
+            {
+                s = 8;
+                mines = 10;
+            }
+            else if (response == "Difficile")
+            {
+                s = 10;
+                mines = 12;
+            }
+
+            int m = mines;
+
+            int[,] grid = new int[s, s];
+
+            while (mines > 0)
+            {
+                int x = Random.Shared.Next(0, grid.GetLength(0));
+                int y = Random.Shared.Next(0, grid.GetLength(1));
+
+                if (grid[x, y] != -100)
+                {
+                    grid[x, y] = -100;
+                    mines -= 1;
+                }
+            }
+
+            for (int x = 0; x < grid.GetLength(0); x++)
+            {
+
+                for (int y = 0; y < grid.GetLength(1); y++)
+                {
+
+                    if (grid[x, y] != -100)
+                    {
+
+                        int num = 0;
+
+                        if (x > 0)
+                            if (grid[x - 1, y] == -100)
+                                num += 1;
+
+                        if (x > 0 && y > 0)
+                            if (grid[x - 1, y - 1] == -100)
+                                num += 1;
+
+                        if (y > 0)
+                            if (grid[x, y - 1] == -100)
+                                num += 1;
+
+                        if (x < grid.GetLength(0) - 1 && y > 0)
+                            if (grid[x + 1, y - 1] == -100)
+                                num += 1;
+
+                        if (x < grid.GetLength(0) - 1)
+                            if (grid[x + 1, y] == -100)
+                                num += 1;
+
+                        if (x < grid.GetLength(0) - 1 && y < grid.GetLength(1) - 1)
+                            if (grid[x + 1, y + 1] == -100)
+                                num += 1;
+
+                        if (y < grid.GetLength(1) - 1)
+                            if (grid[x, y + 1] == -100)
+                                num += 1;
+
+                        if (x > 0 && y < grid.GetLength(1) - 1)
+                            if (grid[x - 1, y + 1] == -100)
+                                num += 1;
+
+                        grid[x, y] = num;
+
+                    }
+
+                }
+
+            }
+
+
+
+            bool isSet = false;
+
+            while (!isSet)
+            {
+                int x = Random.Shared.Next(0, grid.GetLength(0));
+                int y = Random.Shared.Next(0, grid.GetLength(1));
+
+                if (grid[x, y] == 0)
+                {
+                    grid[x, y] = (-grid[x, y]) - 1;
+                    isSet = true;
+                }
+
+            }
+
+            string result = "";
+
+
+            for (int i = 0; i < grid.GetLength(0); i++)
+            {
+                for (int j = 0; j < grid.GetLength(1); j++)
+                {
+                    Console.Write(grid[i, j] + ", ");
+                }
+                Console.WriteLine();
+            }
+
+
+            for (int i = 0; i < grid.GetLength(0); i++)
+            {
+                for (int j = 0; j < grid.GetLength(1); j++)
+                {
+
+                    if (grid[i, j] == 0)
+                        result += "||" + ":zero:" + "||";
+                    if (grid[i, j] == 1)
+                        result += "||" + ":one:" + "||";
+                    if (grid[i, j] == 2)
+                        result += "||" + ":two:" + "||";
+                    if (grid[i, j] == 3)
+                        result += "||" + ":three:" + "||";
+                    if (grid[i, j] == 4)
+                        result += "||" + ":four:" + "||";
+                    if (grid[i, j] == 5)
+                        result += "||" + ":five:" + "||";
+                    if (grid[i, j] == 6)
+                        result += "||" + ":six:" + "||";
+                    if (grid[i, j] == 7)
+                        result += "||" + ":seven:" + "||";
+                    if (grid[i, j] == 8)
+                        result += "||" + ":eight:" + "||";
+
+                    if (grid[i, j] == -100)
+                        result += "||" + ":boom:" + "||";
+
+                    if (grid[i, j] == -1)
+                        result += ":zero:";
+                    if (grid[i, j] == -2)
+                        result += ":one:";
+                    if (grid[i, j] == -3)
+                        result += ":two:";
+                    if (grid[i, j] == -4)
+                        result += ":three:";
+                    if (grid[i, j] == -5)
+                        result += ":four:";
+                    if (grid[i, j] == -6)
+                        result += ":five:";
+                    if (grid[i, j] == -7)
+                        result += ":six:";
+                    if (grid[i, j] == -8)
+                        result += ":seven:";
+                    if (grid[i, j] == -9)
+                        result += ":eight:";
+
+                }
+
+                result += "\n";
+            }
+
+
+            var f = new DiscordEmbedBuilder.EmbedFooter();
+            f.Text = "Grille " + s + "x" + s + " | " + m + " mines";
+            f.IconUrl = ctx.User.AvatarUrl;
+
+            var gridMess = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.SpringGreen,
+                //ImageUrl = 
+                Title = "Demineur 3.0",
+                Description = result,
+                Footer = f,
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(gridMess));
+
+        }
+
+
+
+
+        [SlashCommand("saveinfo", "Une commande pour afficher les données sauvegardées. (admin)")]
+        public async Task GetSaveInfo(InteractionContext ctx)
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+
+            if (ctx.User.Username != "discretos")
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données... (attention, tu n'es pas Discretos, tu n'as pas accès à la base de données)"));
+            else
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données..."));
+
+
+            var m = new DiscordEmbedBuilder
+            {
+                Title = "Données sauvegardées par IngéBot",
+                Color = DiscordColor.Gray,
+                Description = ""
+            };
+
+            m.Description += "**Channel : **";
+            m.Description += "\n";
+            m.Description += "Log Channel : " + ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]).Mention;
+            m.Description += "\n";
+            m.Description += "Welcome Channel : " + ctx.Guild.GetChannel(Stats.welcomeChannels[ctx.Guild.Id]).Mention;
+
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(m));
+
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1).AddComponents(b2).AddComponents(b3));
+
+
+        }
+
+
+
+
+
+
+        [SlashCommand("send", "Une commande pour envoyer un message incognito. héhéhé !  (admin)")]
+        public async Task SendMess(InteractionContext ctx, [Option("Message", "Message à envoyer")] string m)
+        {
+            await ctx.Interaction.Channel.SendMessageAsync(m);
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le message a fonctionné").AsEphemeral(true));
+        }
+
+        [SlashCommand("blague", "Une commande pour une blague.")]
+        public async Task SendBlague(InteractionContext ctx)
+        {
+
+            string b = Stats.blague[Random.Shared.Next(0, Stats.blague.Count)];
+
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Cyan,
+                Description = b.Split("#")[0] + 
+                       "\n" + b.Split("#")[1]
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
+        }
+
+
+        [SlashCommand("restart", "Une commande pour restart le bot ! (admin)")]
+        public async Task Restart(InteractionContext ctx)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Restarting...").AsEphemeral(false));
+        }
+
+
+
+        /*[SlashCommand("welcome", "Une commande pour afficher les règles du serveur ! (admin)")]
+        public async Task Rules(InteractionContext ctx)
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Success, "accept_rules", "Accepter", false);
+            DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Danger, "no_accept_rules", "Refuser", false);
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
+                Color = DiscordColor.Violet,
+                Description = "**Veuillez lire et accepter les règles du serveur**" +
+                " - Ne pas insulter " +
+                " - Être respectueux les uns envers les autres " +
+                " - J'ai plus d'idée... ",
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2));
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1, b2, b3));
+
+        }*/
+
+    }
+}

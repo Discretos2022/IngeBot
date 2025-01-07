@@ -1,0 +1,574 @@
+﻿using Bot.Modules;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.SlashCommands;
+using System;
+using System.Data;
+
+// On Windows   : dotnet publish -c release -r ubuntu.16.04-x64 --self-contained
+// On Windows   : dotnet publish -c release -r win-x86 --self-contained
+// On Linux     : chmod 777 ./IngeBot
+
+// Figgle.FiggleFonts.Standard.Render("Hello, World!")
+
+namespace IngeBot
+{
+    internal class Program
+    {
+
+        private CommandsNextExtension cExtension;
+        private static DiscordClient client;
+
+        private Thread statusThread;
+
+        static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
+
+        public async Task RunBotAsync()
+        {
+
+
+            if (IntPtr.Size == 8)
+                Console.WriteLine("IngéBot x64 (c) 2024 Joshua Siedel");
+            else if (IntPtr.Size == 4)
+                Console.WriteLine("IngéBot x86 (c) 2024 Joshua Siedel");
+
+            /*string file = "Data/defaultChannel.txt";
+            string[] lines = File.ReadAllLines(file);
+            Stats.logChannel = lines[0];
+
+            string file2 = "Data/welcomeChannel.txt";
+            string[] lines2 = File.ReadAllLines(file2);
+            Stats.welcomeChannel = lines2[0];*/
+
+            string[] dirs = Directory.GetDirectories("Data");
+
+            for (int i = 0; i < dirs.Length; i++)
+            {
+
+                if (File.Exists(dirs[i] + "/save/logchannel.txt"))
+                {
+                    string[] lines = File.ReadAllLines(dirs[i] + "/save/logchannel.txt");
+                    Stats.logChannels.Add(ulong.Parse(dirs[i].Split("\\")[1]), ulong.Parse(lines[0]));
+                }
+
+                if (File.Exists(dirs[i] + "/save/welcomechannel.txt"))
+                {
+                    string[] lines = File.ReadAllLines(dirs[i] + "/save/welcomechannel.txt");
+                    Stats.welcomeChannels.Add(ulong.Parse(dirs[i].Split("\\")[1]), ulong.Parse(lines[0]));
+                }
+
+            }
+
+
+
+            var discordConfig = new DiscordConfiguration()
+            {
+                Intents = DiscordIntents.All,
+
+                // Version Stable : MTMxODk2ODg3NTg3ODA1NTkzNg.Gsc7u6.K0qlw-PUGsupdoxbKyFWYs7E6YTeBO0Rl9HJ9Y
+                // Version Bêta   : MTMxNjg1NjY5NzI4NDcyMjczMA.GFdwui.lxUXaUgfYsyWEiFze5FXkpwW_L_CcjNCqBIjRM
+                Token = "MTMxNjg1NjY5NzI4NDcyMjczMA.GFdwui.lxUXaUgfYsyWEiFze5FXkpwW_L_CcjNCqBIjRM",
+                TokenType = TokenType.Bot,
+                AutoReconnect = true
+            };
+
+            client = new DiscordClient(discordConfig);
+
+            client.UseInteractivity(new InteractivityConfiguration()
+            {
+                Timeout = TimeSpan.FromMinutes(2)
+            });
+
+            client.Ready += OnClientReady;
+            client.MessageCreated += MessageCreatedHandler;
+            client.MessageUpdated += MessageUpdatedHandler;
+            client.MessageDeleted += MessageDeletedHandler;
+            client.GuildMemberAdded += GuildMemberAddedHandler;
+            client.GuildMemberRemoved += GuildMemberRemovedHandler;
+            client.ComponentInteractionCreated += PressedButton;
+            client.ModalSubmitted += ModalHandler;
+
+            client.GuildRoleCreated += RoleCreatedHandler;
+
+            var commandsConfig = new CommandsNextConfiguration
+            {
+                StringPrefixes = new string[] { "/" },
+                EnableDms = true,
+                EnableMentionPrefix = true,
+                DmHelp = true,
+                //Services = services
+            };
+
+            cExtension = client.UseCommandsNext(commandsConfig);
+            var slashUserCommandsConfiguration = client.UseSlashCommands();
+
+            cExtension.RegisterCommands<Commands>();
+            slashUserCommandsConfiguration.RegisterCommands<SlashCommands>();
+
+            await client.ConnectAsync(status: UserStatus.Online); // new DiscordActivity("Bang", ActivityType.Playing), 
+
+            statusThread = new Thread(() => UpdateStatusLoop());
+            statusThread.Start();
+
+            await Task.Delay(-1);
+
+        }
+
+        private static List<string> saluts = new List<string> { "salut", "hi", "bonjour", "slt", "hello", "hallo", "allo", "👋", "ola" };
+
+        private static async Task MessageCreatedHandler(DiscordClient sender, MessageCreateEventArgs e)
+        {
+            if (e.Message.Content.ToLower().Contains("cd"))
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":cd:")); // DiscordAttachment
+
+            //if (e.Message.Author.Username == "discretos") //  || e.Message.Author.Username == "mimisorrey"
+                //await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":cd:"));
+
+            foreach (string i in saluts)
+                if (e.Message.Content.ToLower().Contains(i))
+                {
+                    await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":wave:")); // DiscordAttachment
+                    break;
+                }
+
+            //if (e.Author.Username != "ThunderBot")
+            //await e.Message.RespondAsync("Server : " + e.Guild.Name + " / " + e.Channel.Name + " / " + e.Author.Mention + " / " + e.Author.AvatarUrl + " / " + e.Guild.IconUrl); // "Tu parles beaucoup !"
+
+            if (e.Message.Content.Contains("merde"))
+            {
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":x:"));
+
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+
+            }
+            else if (e.Message.Content.Contains(" con "))
+            {
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+            }
+            else if (e.Message.Content.Contains("fdp"))
+            {
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+            }
+            else if (e.Message.Content.Contains("débile"))
+            {
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+            }
+            else if (e.Message.Content.Contains("crétin"))
+            {
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+            }
+            else if (e.Message.Content.Contains("idiot"))
+            {
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+            }
+            else if (e.Message.Content.Contains("zinzin"))
+            {
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+            }
+            else if (e.Message.Content.Contains("merdouille"))
+            {
+                if (e.Author.Username == "discretos")
+                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                else
+                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+            }
+
+        }
+
+        private static async Task MessageUpdatedHandler(DiscordClient sender, MessageUpdateEventArgs e)
+        {
+
+            DiscordChannel channel = e.Guild.GetDefaultChannel();
+            if (Stats.logChannels.ContainsKey(e.Guild.Id))
+                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
+
+
+            string oldMess = "";
+            if (e.MessageBefore == null)
+                oldMess = "/!\\ Il y a une erreur !";
+            else
+                oldMess = e.MessageBefore.Content;
+
+
+            var ancien = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.SpringGreen,
+                Title = "Ancien : ",
+                Description = oldMess,
+            };
+
+            var nouveau = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.SpringGreen,
+                Title = "Nouveau : ",
+                Description = e.Message.Content,
+            };
+
+
+            if (e.Author.Username != "IngeBot_Beta")
+                await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent("L'utilisateur " + e.Author.Username + " a modifié un message.").AddEmbed(ancien).AddEmbed(nouveau));
+        }
+
+        private static async Task MessageDeletedHandler(DiscordClient sender, MessageDeleteEventArgs e)
+        {
+            DiscordChannel channel = e.Guild.GetDefaultChannel();
+
+            if (Stats.logChannels.ContainsKey(e.Guild.Id))
+                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
+
+            string oldMess = e.Message.Content;
+            if (e.Message.Content == "")
+                oldMess = "/!\\ Il y a une erreur !";
+
+            var deleted = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.SpringGreen,
+                Title = "Supprimé : ",
+                Description = oldMess,
+            };
+
+            if(e.Message.Author != null)
+            {
+                if (e.Message.Author.Username != "IngeBot_Beta")
+                    await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent("L'utilisateur " + e.Message.Author.Username + " a supprimé un message.").AddEmbed(deleted));
+                //else
+                    //await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent("L'utilisateur " + "ERREUR" + " a supprimé un message.").AddEmbed(deleted));
+
+            }
+
+        }
+
+        private static async Task GuildMemberAddedHandler(DiscordClient sender, GuildMemberAddEventArgs e)
+        {
+
+            DiscordChannel channel = e.Guild.GetDefaultChannel();
+
+            if (Stats.welcomeChannels.ContainsKey(e.Guild.Id))
+                channel = e.Guild.GetChannel(Stats.welcomeChannels[e.Guild.Id]);
+
+            await channel.SendMessageAsync("Bienvenu sur le serveur !   Accueillez : " + e.Member.DisplayName);
+        }
+
+        private static async Task GuildMemberRemovedHandler(DiscordClient sender, GuildMemberRemoveEventArgs e)
+        {
+
+            DiscordChannel channel = e.Guild.GetDefaultChannel();
+
+            if (Stats.logChannels.ContainsKey(e.Guild.Id))
+                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
+
+            await channel.SendMessageAsync(e.Member.DisplayName + " est partie...");
+        }
+
+        private static async Task RoleCreatedHandler(DiscordClient sender, GuildRoleCreateEventArgs e)
+        {
+
+            DiscordChannel channel = e.Guild.GetDefaultChannel();
+
+            if (Stats.logChannels.ContainsKey(e.Guild.Id))
+                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
+
+            await channel.SendMessageAsync("Le role " + e.Role.Mention + " a été créer par " + sender.CurrentUser.Username + ".");
+        }
+
+
+
+        private static Task OnClientReady(DiscordClient sender, ReadyEventArgs e)
+        {
+            return Task.CompletedTask;
+        }
+
+
+
+        private void UpdateStatusLoop()
+        {
+
+            while (true)
+            {
+
+                // Bonne année !
+                if (DateTime.Now.Day == 01 && DateTime.Now.Month == 01 && DateTime.Now.Hour == 00 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
+                {
+
+                    DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
+
+                    if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
+                        channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
+
+                    /*var mess = new DiscordEmbedBuilder
+                    {
+                        Color = DiscordColor.Red,
+                        Title = "ℬ𝒪𝒩𝒩ℰ 𝒜𝒩𝒩ℰℰ 𝟚𝟘𝟚𝟝 !",
+                    };*/
+
+                    channel.SendMessageAsync("Bonne année 𝟚𝟘𝟚𝟝 !");
+
+                }
+
+                // Joyeux Noel !
+                if (DateTime.Now.Day == 25 && DateTime.Now.Month == 12 && DateTime.Now.Hour == 09 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
+                {
+
+                    DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
+
+                    if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
+                        channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
+
+                    var mess = new DiscordEmbedBuilder
+                    {
+                        Color = DiscordColor.Red,
+                        Title = "𝒥𝑜𝓎𝑒𝓊𝓍 𝒩𝑜𝑒𝓁 *!*",
+                    };
+
+                    channel.SendMessageAsync(mess);
+
+                }
+
+                Thread.Sleep(1000);
+            }
+
+        }
+
+        private async Task UpdateStatus()
+        {
+
+            
+
+            
+
+        }
+
+
+
+
+
+        private static async Task PressedButton(DiscordClient sender, ComponentInteractionCreateEventArgs e)
+        {
+
+            //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Button pressed !"));
+
+            var m = await e.Guild.GetMemberAsync(e.User.Id);
+            var c = await m.CreateDmChannelAsync();
+
+            if (e.Interaction.Data.CustomId == "game_jam")
+            {
+
+                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1160611550063767683)))
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1160611550063767683));
+                    //await c.SendMessageAsync("Le rôle @GameJam vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !");
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @GameJam vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !").AsEphemeral(true));
+                }
+                else
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1160611550063767683));
+                    //await c.SendMessageAsync("Le rôle @GameJam vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !");
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @GameJam vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !").AsEphemeral(true));
+                }
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
+                await e.Interaction.DeleteOriginalResponseAsync();
+            }
+            //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle GameJam vous à été conféré !").AsEphemeral(true));
+
+            else if (e.Interaction.Data.CustomId == "jeudi_soir")
+            {// 1167037183861989428
+                await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1167037183861989428));
+                //await c.SendMessageAsync("Le rôle @JeudiSoir vous à été conféré ! Tu as désormais accès aux salons concernant les évenements du jeudi soir !");
+
+
+                DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "jeu_soc", "Jeux de société", false);
+                DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeu_vid", "Jeux Vidéo", false);
+
+                var message = new DiscordEmbedBuilder
+                {
+                    Title = "Pour quel type de jeux ?",
+                    Color = DiscordColor.Violet,
+                };
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2).AsEphemeral(true));
+
+            }
+
+            else if (e.Interaction.Data.CustomId == "jeu_soc")
+            {
+
+                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156946871571456040)))
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156946871571456040));
+                    //await c.SendMessageAsync("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !");
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !").AsEphemeral(true));
+                }
+                else
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156946871571456040));
+                    //await c.SendMessageAsync("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !");
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !").AsEphemeral(true));
+                }
+
+                //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
+                //await e.Interaction.DeleteOriginalResponseAsync();
+
+            }
+
+            else if (e.Interaction.Data.CustomId == "jeu_vid")
+            {
+
+                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156942741389987870)))
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156942741389987870));
+                    await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !");
+                }
+                else
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156942741389987870));
+                    await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !");
+                }
+
+                //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
+                //await e.Interaction.DeleteOriginalResponseAsync();
+            }
+
+            else if (e.Interaction.Data.CustomId == "accept_rules")
+            {
+                await c.SendMessageAsync("Tu as accepté les règles ! Sage décision !");
+
+                DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "hes_yes", "HES", false);
+                DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "hes_no", "Hors HES", false);
+
+                var message = new DiscordEmbedBuilder
+                {
+                    Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
+                    Color = DiscordColor.Violet,
+                    Description = "D'où vient-tu voyageur ?",
+                };
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2).AsEphemeral(true));
+
+            }
+
+            else if(e.Interaction.Data.CustomId == "hes_yes" || e.Interaction.Data.CustomId == "hes_no")
+            {
+                DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
+                DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
+                //DiscordButtonComponent b3 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
+                DiscordButtonComponent b100 = new DiscordButtonComponent(ButtonStyle.Primary, "???", "???", true);
+
+                var message = new DiscordEmbedBuilder
+                {
+                    Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
+                    Color = DiscordColor.Violet,
+                    Description = "Pourquoi êtes-tu ici ?",
+                };
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2, b100).AsEphemeral(true));
+
+            }
+
+
+            else if (e.Interaction.Data.CustomId == "no_accept_rules")
+            {
+
+                DiscordChannel channel = e.Guild.GetDefaultChannel();
+
+                if (Stats.logChannels.ContainsKey(e.Guild.Id))
+                    channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
+
+                await channel.SendMessageAsync(e.Interaction.User.Username + " n'a pas accepté les règles...");
+
+                await c.SendMessageAsync("Tu n'as pas accepté les règles ? Pourquoi ? Si il y a un problème avec, parles-en avec un @ingénieurs.");
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
+                await e.Interaction.DeleteOriginalResponseAsync();
+            }
+
+            else if (e.Interaction.Data.CustomId == "roles")
+            {
+                Console.WriteLine("DATA : " + e.Values[0]);
+                Stats.role = e.Values[0];
+            }
+
+            else if (e.Interaction.Data.CustomId == "user")
+            {
+                //Console.WriteLine("DATA : " + e.Values[0] + " / " + e.Guild.GetMemberAsync(ulong.Parse(e.Values[0])).Result.ToString());
+                Stats.user = e.Values[0];
+            }
+
+            else if (e.Interaction.Data.CustomId == "valid")
+            {
+
+                string mess;
+                    
+                if(Stats.date != "")
+                {
+
+                    mess = "IngéBot has grant role " + e.Guild.GetRole(ulong.Parse(Stats.role)).Mention.ToString() + " to user " + e.Guild.GetMemberAsync(ulong.Parse(Stats.user)).Result.Mention + " ! (End : " + Stats.date + ")";
+                }
+                else
+                    mess = "IngéBot has grant role " + e.Guild.GetRole(ulong.Parse(Stats.role)).Mention.ToString() + " to user " + e.Guild.GetMemberAsync(ulong.Parse(Stats.user)).Result.Mention + " !";
+
+
+                await e.Guild.GetMemberAsync(ulong.Parse(Stats.user)).Result.GrantRoleAsync(e.Guild.GetRole(ulong.Parse(Stats.role)));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(mess));
+
+            }
+
+            else if (e.Interaction.Data.CustomId == "seldate")
+            {
+                var modal = new DiscordInteractionResponseBuilder().WithTitle(" Sélectionne une date de fin").WithCustomId("modal_date_role").AddComponents(new TextInputComponent("Date (FORMAT : AAAA.MM.JJ HH.MM.SS) : ", "id_text_date", "Entre la date avec le BON format"));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+            }
+
+
+            //else
+            //await c.SendMessageAsync("a, ... ce bouton ne doit pas être là...");
+            //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("a, ... ce bouton ne doit pas être là...").AsEphemeral(true));
+
+        }
+
+        private static async Task ModalHandler(DiscordClient sender, ModalSubmitEventArgs e)
+        {
+
+            if (e.Interaction.Data.CustomId == "modal_bot_game")
+            {
+                Stats.botGame = e.Values.Values.First();
+                await client.UpdateStatusAsync(new DiscordActivity(Stats.botGame, ActivityType.Playing), userStatus: UserStatus.Online);
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le jeu va être mis à jour avec : " + Stats.botGame));
+            }
+
+            else if (e.Interaction.Data.CustomId == "modal_date_role")
+            {
+                Stats.date = e.Values.Values.First();
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le jeu va être mis à jour avec : " + Stats.botGame));
+                await e.Interaction.DeleteOriginalResponseAsync();
+            }
+
+        }
+
+    }
+}
