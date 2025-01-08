@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,6 +46,10 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
+        public static string version = "1.1";
+
+        public static Stopwatch sw = new Stopwatch();
+
 
         public static Dictionary<ulong, ulong> logChannels = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, ulong> welcomeChannels = new Dictionary<ulong, ulong>();
@@ -69,11 +74,13 @@ namespace IngeBot
         public static List<string> blague = new List<string>
         {
             "Je suis un poisson et je suis pané. Qui suis-je ? # || Personne, puisque je ne suis pané... ||",
-            "2 # || 2 ||",
+            "Qu'est ce qu'un chat tout terrain ? # || Un cat-cat (4x4) ||",
             "3 # || 3 ||",
             "4 # || 4 ||",
             "5 # || 5 ||",
         };
+
+        public static List<string> saluts = new List<string> { "salut", "hi ", "bonjour", "slt", "hello", "hallo", "allo", "👋", "ola" };
 
     }
 }

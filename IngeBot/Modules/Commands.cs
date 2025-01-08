@@ -67,17 +67,17 @@ namespace Bot.Modules
         public async Task InfoAsync(InteractionContext ctx)
         {
 
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Alors..."));
-
             var message = new DiscordEmbedBuilder
             {
                 Color = DiscordColor.Yellow,
                 Title = "Information : ",
-                Description = "IngéBot ver 1.0 beta ______ Copyright (c) 2024 SIEDEL Joshua _______ IP : Tu croyais que j'allais vraiment mettre l'adresse ip !",
+                Description = "`IngéBot ver " + Stats.version +
+                "\nCopyright (c) 2024-2025 SIEDEL Joshua" +
+                "\nIP : Tu croyais que j'allais vraiment mettre l'adresse ip ! X)`",
 
             };
 
-            await ctx.Channel.SendMessageAsync(embed: message);
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
 
         }
 
@@ -218,10 +218,17 @@ namespace Bot.Modules
 
         }*/
 
-        /*[SlashCommand("ip", "L'adresse IP du server qui héberge le bot.")]
+        [SlashCommand("ip", "L'adresse IP du server qui héberge le bot. (𝕯𝖎𝖘𝖈𝖗𝖊𝖙𝖔𝖘)")]
         public async Task GetIPAsync(InteractionContext ctx)
         {
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Je cherche dans la base de données..."));
+
+            if (ctx.User.Username != "discretos")
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche en cours..."));
 
             var message = new DiscordEmbedBuilder
             {
@@ -233,7 +240,7 @@ namespace Bot.Modules
 
             await ctx.Channel.SendMessageAsync(embed: message);
 
-        }*/
+        }
 
         public static string SearchPublicIP()
         {
@@ -444,10 +451,28 @@ namespace Bot.Modules
 
             /// TODO : ???
 
+            if(response == "true" || response == "false")
+            {
+                Directory.CreateDirectory("Data/" + ctx.Guild.Id);
+                string fileName = "Data/" + ctx.Guild.Id + "/save/moderation.txt";
+
+                FileStream stream = File.OpenWrite(fileName);
+                StreamWriter file = new StreamWriter(stream);
+
+                file.WriteLine(response);
+                file.Close();
+            }
+
             if (response == "true")
+            {
+                Stats.moderationEnabled = true;
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le système de modération a été activé !"));
+            }
             else if (response == "false")
+            {
+                Stats.moderationEnabled = false;
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le système de modération a été désactivé !"));
+            }
             else
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La commande n'est pas valide !"));
 
@@ -885,6 +910,10 @@ namespace Bot.Modules
             m.Description += "Log Channel : " + ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]).Mention;
             m.Description += "\n";
             m.Description += "Welcome Channel : " + ctx.Guild.GetChannel(Stats.welcomeChannels[ctx.Guild.Id]).Mention;
+            m.Description += "\n\n";
+            m.Description += "**Modération : **";
+            m.Description += "\n";
+            m.Description += "Modération : " + Stats.moderationEnabled;
 
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(m));
 
@@ -927,7 +956,77 @@ namespace Bot.Modules
         [SlashCommand("restart", "Une commande pour restart le bot ! (admin)")]
         public async Task Restart(InteractionContext ctx)
         {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Restarting...").AsEphemeral(false));
+        }
+
+
+
+        [SlashCommand("help", "Une commande pour afficher toutes les commandes ! (admin)")]
+        public async Task Help(InteractionContext ctx)
+        {
+
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "/help !",
+                Color = DiscordColor.Gray,
+                Description = "**La liste des commandes slash :**" +
+                " \n /help : Afficher toutes les commandes et leurs actions" +
+                " \n /hello : Vérifie si le bot fonctionne" +
+                " \n /demineur : Génere une grille de démineur" +
+                " \n /blague : Créer une blague aléatoire" +
+                " \n /send : Permet d'envoyer un message incognito" +
+                " \n /setchannellog : Défini le salon pour les logs" +
+                " \n /setwelcomechannel : Défini le salon pour les messages de bienvenu" +
+                " \n /addrole : Ajoute un rôle à quelqu'un (ne fonctione pas avec un temps)" +
+                " \n /setbotgame : Défini le jeu auquel le bot joue" +
+                " \n /welcome : Message welcome" +
+                " \n /ticket : Créer un salon avec toi et les staffs" +
+                " \n /flyer : Affiche le flyer d'un évènement en cours" +
+                " \n /moderation : Active/Désactive la modération auto" +
+                " \n /info : Affiche quelques infos sur le bot" +
+                " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
+                " \n " +
+                " \n **La liste des commandes natives :**" +
+                " \n /hellotest : Test natif"
+
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
+        }
+
+
+        [SlashCommand("ticket", "Une commande pour créer un ticket !")]
+        public async Task CreateTicket(InteractionContext ctx, [Option("Nom", "Message du ticket")] string m)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande ne fonctionne pas encore !").AsEphemeral(false));
+
+
+            DiscordChannel c = ctx.Interaction.Guild.CreateChannelAsync(m, ChannelType.Private).Result;
+
+            //c.AddOverwriteAsync(ctx.Member);
+
+
+            //await Program.restClient.EditChannelPermissionsAsync(c.Id, default, Permissions.ManageRoles, default, "test", "test");
+
+            //await c.CreateInviteAsync(targetUserId:ctx.Interaction.User.Id);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Création du ticket en cours...").AsEphemeral(false));
+        }
+
+
+
+        [SlashCommand("runtime", "Donne le temps pendant lequel le bot ne s'est pas interrompu !")]
+        public async Task GetRunTime(InteractionContext ctx)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Temps : " + Stats.sw.Elapsed.Hours + "h " + Stats.sw.Elapsed.Minutes + "min " + Stats.sw.Elapsed.Seconds + "sec"));
         }
 
 

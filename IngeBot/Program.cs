@@ -23,6 +23,8 @@ namespace IngeBot
         private CommandsNextExtension cExtension;
         private static DiscordClient client;
 
+        public static DiscordRestClient restClient;
+
         private Thread statusThread;
 
         static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
@@ -32,9 +34,9 @@ namespace IngeBot
 
 
             if (IntPtr.Size == 8)
-                Console.WriteLine("IngéBot x64 (c) 2024 Joshua Siedel");
+                Console.WriteLine("IngéBot " + Stats.version + " x64 (c) 2024 Joshua Siedel");
             else if (IntPtr.Size == 4)
-                Console.WriteLine("IngéBot x86 (c) 2024 Joshua Siedel");
+                Console.WriteLine("IngéBot " + Stats.version + " x86 (c) 2024 Joshua Siedel");
 
             /*string file = "Data/defaultChannel.txt";
             string[] lines = File.ReadAllLines(file);
@@ -61,6 +63,20 @@ namespace IngeBot
                     Stats.welcomeChannels.Add(ulong.Parse(dirs[i].Split(new char[] { '\\', '/' })[1]), ulong.Parse(lines[0]));
                 }
 
+                if (File.Exists(dirs[i] + "/save/moderation.txt"))
+                {
+                    string[] lines = File.ReadAllLines(dirs[i] + "/save/moderation.txt");
+                    try
+                    {
+                        Stats.moderationEnabled = bool.Parse(lines[0]);
+                    }
+                    catch(FormatException e)
+                    {
+                        Console.WriteLine("Bad format moderation !");
+                        Stats.moderationEnabled = false;
+                    }
+                }
+
             }
 
 
@@ -69,9 +85,9 @@ namespace IngeBot
             {
                 Intents = DiscordIntents.All,
 
-                // Version Stable : MTMxODk2ODg3NTg3ODA1NTkzNg.Gsc7u6.K0qlw-PUGsupdoxbKyFWYs7E6YTeBO0Rl9HJ9Y
-                // Version Bêta   : MTMxNjg1NjY5NzI4NDcyMjczMA.GFdwui.lxUXaUgfYsyWEiFze5FXkpwW_L_CcjNCqBIjRM
-                Token = "MTMxNjg1NjY5NzI4NDcyMjczMA.GFdwui.lxUXaUgfYsyWEiFze5FXkpwW_L_CcjNCqBIjRM",
+                // Version Bêta     : MTMxODk2ODg3NTg3ODA1NTkzNg.Gsc7u6.K0qlw-PUGsupdoxbKyFWYs7E6YTeBO0Rl9HJ9Y
+                // Version Stable   : MTMxNjg1NjY5NzI4NDcyMjczMA.GFdwui.lxUXaUgfYsyWEiFze5FXkpwW_L_CcjNCqBIjRM
+                Token = Token.token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true
             };
@@ -114,21 +130,24 @@ namespace IngeBot
             statusThread = new Thread(() => UpdateStatusLoop());
             statusThread.Start();
 
+            restClient = new DiscordRestClient(discordConfig);
+
+            Stats.sw.Start();
+
             await Task.Delay(-1);
 
         }
 
-        private static List<string> saluts = new List<string> { "salut", "hi", "bonjour", "slt", "hello", "hallo", "allo", "👋", "ola" };
 
         private static async Task MessageCreatedHandler(DiscordClient sender, MessageCreateEventArgs e)
         {
             if (e.Message.Content.ToLower().Contains("cd"))
-                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":cd:")); // DiscordAttachment
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":CD2000x:")); // DiscordAttachment
 
             //if (e.Message.Author.Username == "discretos") //  || e.Message.Author.Username == "mimisorrey"
                 //await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":cd:"));
 
-            foreach (string i in saluts)
+            foreach (string i in Stats.saluts)
                 if (e.Message.Content.ToLower().Contains(i))
                 {
                     await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":wave:")); // DiscordAttachment
@@ -138,64 +157,74 @@ namespace IngeBot
             //if (e.Author.Username != "ThunderBot")
             //await e.Message.RespondAsync("Server : " + e.Guild.Name + " / " + e.Channel.Name + " / " + e.Author.Mention + " / " + e.Author.AvatarUrl + " / " + e.Guild.IconUrl); // "Tu parles beaucoup !"
 
-            if (e.Message.Content.Contains("merde"))
+            if (Stats.moderationEnabled)
             {
-                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":x:"));
 
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                if (e.Message.Content.Contains("merde"))
+                {
+                    //await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":x:"));
+                    await e.Message.DeleteAsync();
 
-            }
-            else if (e.Message.Content.Contains(" con "))
-            {
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
-            }
-            else if (e.Message.Content.Contains("fdp"))
-            {
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
-            }
-            else if (e.Message.Content.Contains("débile"))
-            {
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
-            }
-            else if (e.Message.Content.Contains("crétin"))
-            {
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
-            }
-            else if (e.Message.Content.Contains("idiot"))
-            {
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
-            }
-            else if (e.Message.Content.Contains("zinzin"))
-            {
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
-            }
-            else if (e.Message.Content.Contains("merdouille"))
-            {
-                if (e.Author.Username == "discretos")
-                    await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
-                else
-                    await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                    await e.Channel.SendMessageAsync("Message supprimé pour des raisons de sécurité !");
+
+                    /*if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                    */
+
+
+                }
+                else if (e.Message.Content.Contains(" con "))
+                {
+                    if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                }
+                else if (e.Message.Content.Contains("fdp"))
+                {
+                    if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                }
+                else if (e.Message.Content.Contains("débile"))
+                {
+                    if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                }
+                else if (e.Message.Content.Contains("crétin"))
+                {
+                    if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                }
+                else if (e.Message.Content.Contains("idiot"))
+                {
+                    if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                }
+                else if (e.Message.Content.Contains("zinzin"))
+                {
+                    if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                }
+                else if (e.Message.Content.Contains("merdouille"))
+                {
+                    if (e.Author.Username == "discretos")
+                        await e.Channel.SendMessageAsync("Le développeur qui insulte !?  Mais c'est pas vrai.  :grin: ");
+                    else
+                        await e.Channel.SendMessageAsync(e.Guild.GetMemberAsync(e.Author.Id).Result.DisplayName + " est un grossier personnage !");
+                }
+
             }
 
         }
@@ -214,24 +243,33 @@ namespace IngeBot
             else
                 oldMess = e.MessageBefore.Content;
 
-
-            var ancien = new DiscordEmbedBuilder
+            var t = new DiscordEmbedBuilder.EmbedFooter
             {
-                Color = DiscordColor.SpringGreen,
-                Title = "Ancien : ",
-                Description = oldMess,
+                Text = e.Guild.GetMemberAsync(e.Message.Author.Id).Result.Nickname,
+                IconUrl = e.Message.Author.AvatarUrl,
             };
 
-            var nouveau = new DiscordEmbedBuilder
+            var message = new DiscordEmbedBuilder
             {
+                
+
+                Footer = t,
+
+                // = ,
+                Title = "Message modifié par " + e.Guild.GetMemberAsync(e.Message.Author.Id).Result.Nickname + " dans " + e.Channel.Mention,
                 Color = DiscordColor.SpringGreen,
-                Title = "Nouveau : ",
-                Description = e.Message.Content,
+                Description = "**Ancien : **" +
+                "\n" + oldMess +
+                "\n" +
+                "\n**Nouveau : **" +
+                "\n" + e.Message.Content,
+
+                Timestamp = DateTime.Now,
             };
 
 
-            if (e.Author.Username != "IngeBot_Beta")
-                await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent("L'utilisateur " + e.Author.Username + " a modifié un message.").AddEmbed(ancien).AddEmbed(nouveau));
+            if (e.Author.Username != "IngéBot")
+                await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message));
         }
 
         private static async Task MessageDeletedHandler(DiscordClient sender, MessageDeleteEventArgs e)
@@ -245,17 +283,25 @@ namespace IngeBot
             if (e.Message.Content == "")
                 oldMess = "/!\\ Il y a une erreur !";
 
+            var t = new DiscordEmbedBuilder.EmbedFooter
+            {
+                Text = e.Guild.GetMemberAsync(e.Message.Author.Id).Result.Nickname,
+                IconUrl = e.Message.Author.AvatarUrl,
+            };
+
             var deleted = new DiscordEmbedBuilder
             {
                 Color = DiscordColor.SpringGreen,
-                Title = "Supprimé : ",
-                Description = oldMess,
+                Title = "Message supprimé par " + e.Guild.GetMemberAsync(e.Message.Author.Id).Result.Nickname + " dans " + e.Channel.Mention,
+                Description = "**Message : **" + oldMess,
+                Timestamp = DateTime.Now,
+                Footer = t,
             };
 
             if(e.Message.Author != null)
             {
-                if (e.Message.Author.Username != "IngeBot_Beta")
-                    await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent("L'utilisateur " + e.Message.Author.Username + " a supprimé un message.").AddEmbed(deleted));
+                if (e.Message.Author.Username != "IngéBot")
+                    await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(deleted));
                 //else
                     //await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent("L'utilisateur " + "ERREUR" + " a supprimé un message.").AddEmbed(deleted));
 
@@ -442,12 +488,16 @@ namespace IngeBot
                 if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156942741389987870)))
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156942741389987870));
-                    await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !");
+                    //await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !");
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !").AsEphemeral(true));
+
                 }
                 else
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156942741389987870));
-                    await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !");
+                    //await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !");
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !").AsEphemeral(true));
+
                 }
 
                 //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
