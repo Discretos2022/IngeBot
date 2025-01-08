@@ -1026,7 +1026,7 @@ namespace Bot.Modules
         [SlashCommand("runtime", "Donne le temps pendant lequel le bot ne s'est pas interrompu !")]
         public async Task GetRunTime(InteractionContext ctx)
         {
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Temps : " + Stats.sw.Elapsed.Hours + "h " + Stats.sw.Elapsed.Minutes + "min " + Stats.sw.Elapsed.Seconds + "sec"));
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Temps : " + Stats.sw.Elapsed.Days + "j " + Stats.sw.Elapsed.Hours + "h " + Stats.sw.Elapsed.Minutes + "min " + Stats.sw.Elapsed.Seconds + "sec"));
         }
 
 
