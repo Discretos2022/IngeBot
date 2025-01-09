@@ -421,6 +421,10 @@ namespace IngeBot
             var m = await e.Guild.GetMemberAsync(e.User.Id);
             var c = await m.CreateDmChannelAsync();
 
+
+            bool welcomeEph = true;
+
+
             if (e.Interaction.Data.CustomId == "game_jam")
             {
 
@@ -428,13 +432,32 @@ namespace IngeBot
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1160611550063767683));
                     //await c.SendMessageAsync("Le rôle @GameJam vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !");
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @GameJam vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !").AsEphemeral(true));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle " + e.Guild.GetRole(1160611550063767683).Mention + " vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !").AsEphemeral(welcomeEph));
                 }
                 else
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1160611550063767683));
                     //await c.SendMessageAsync("Le rôle @GameJam vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !");
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @GameJam vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !").AsEphemeral(true));
+
+                    var t = new DiscordEmbedBuilder.EmbedFooter
+                    {
+                        IconUrl = e.Message.Author.AvatarUrl,
+                        Text = "https://forms.office.com/e/T7zPcwnHNd"
+                    };
+
+                    var lien = new DiscordEmbedBuilder
+                    {
+                        Color = DiscordColor.SpringGreen,
+                        Title = "**Pré-inscription Game Jam**",
+                        Description = "Pour compter comme inscrit pour la gamejam, inscrivez-vous sur ce formulaire. " +
+                        "\n (Ceci est la pré-inscription, nous reviendrons vers vous pour une inscription officielle)",
+                        Timestamp = DateTime.Now,
+                        Url = "https://forms.office.com/e/T7zPcwnHNd",
+                        Footer = t,
+                    };
+
+
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle " + e.Guild.GetRole(1160611550063767683).Mention + " vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !").AddEmbed(lien).AsEphemeral(welcomeEph));
                 }
 
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
@@ -457,7 +480,7 @@ namespace IngeBot
                     Color = DiscordColor.Violet,
                 };
 
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2).AsEphemeral(true));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2).AsEphemeral(welcomeEph));
 
             }
 
@@ -468,13 +491,13 @@ namespace IngeBot
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156946871571456040));
                     //await c.SendMessageAsync("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !");
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !").AsEphemeral(true));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !").AsEphemeral(welcomeEph));
                 }
                 else
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156946871571456040));
                     //await c.SendMessageAsync("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !");
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !").AsEphemeral(true));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !").AsEphemeral(welcomeEph));
                 }
 
                 //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
@@ -489,14 +512,14 @@ namespace IngeBot
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156942741389987870));
                     //await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !");
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !").AsEphemeral(true));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !").AsEphemeral(welcomeEph));
 
                 }
                 else
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156942741389987870));
                     //await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !");
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !").AsEphemeral(true));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !").AsEphemeral(welcomeEph));
 
                 }
 
@@ -518,7 +541,7 @@ namespace IngeBot
                     Description = "D'où vient-tu voyageur ?",
                 };
 
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2).AsEphemeral(true));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2).AsEphemeral(welcomeEph));
 
             }
 
@@ -536,7 +559,7 @@ namespace IngeBot
                     Description = "Pourquoi êtes-tu ici ?",
                 };
 
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2, b100).AsEphemeral(true));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2, b100).AsEphemeral(welcomeEph));
 
             }
 

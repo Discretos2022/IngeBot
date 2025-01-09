@@ -46,7 +46,7 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1";
+        public static string version = "1.1.1";
 
         public static Stopwatch sw = new Stopwatch();
 
