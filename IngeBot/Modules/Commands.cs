@@ -233,11 +233,10 @@ namespace Bot.Modules
             var message = new DiscordEmbedBuilder
             {
                 Color = DiscordColor.Aquamarine,
-                Description = "Public IP : " + SearchPublicIP() + " ",
+                Description = "Public IP : " + SearchPublicIP() + "",
             };
 
-            Console.WriteLine(message.Description);
-
+            await ctx.Interaction.DeleteOriginalResponseAsync();
             await ctx.Channel.SendMessageAsync(embed: message);
 
         }
@@ -258,7 +257,7 @@ namespace Bot.Modules
                 //Search for the ip in the html
                 int first = direction.IndexOf("Address: ") + 9;
                 int last = direction.LastIndexOf("");
-                direction = direction.Substring(first, last - first - 15);
+                direction = direction.Substring(first, last - first - 16);
                 return direction;
             }
             catch (Exception ex)
@@ -972,32 +971,63 @@ namespace Bot.Modules
         public async Task Help(InteractionContext ctx)
         {
 
+            DiscordEmbedBuilder message = null;
 
-            var message = new DiscordEmbedBuilder
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole)) // && !Stats.ContainsRole(ctx.Member, Stats.adminRole)
             {
-                Title = "/help !",
-                Color = DiscordColor.Gray,
-                Description = "**La liste des commandes slash :**" +
+                message = new DiscordEmbedBuilder
+                {
+                    Title = "/help !",
+                    Color = DiscordColor.Gray,
+                    Description = "**La liste des commandes slash :**" +
                 " \n /help : Afficher toutes les commandes et leurs actions" +
                 " \n /hello : Vérifie si le bot fonctionne" +
                 " \n /demineur : Génere une grille de démineur" +
                 " \n /blague : Créer une blague aléatoire" +
                 " \n /send : Permet d'envoyer un message incognito" +
-                " \n /setchannellog : Défini le salon pour les logs" +
-                " \n /setwelcomechannel : Défini le salon pour les messages de bienvenu" +
-                " \n /addrole : Ajoute un rôle à quelqu'un (ne fonctione pas avec un temps)" +
-                " \n /setbotgame : Défini le jeu auquel le bot joue" +
-                " \n /welcome : Message welcome" +
-                " \n /ticket : Créer un salon avec toi et les staffs" +
+                " \n /ticket : Créer un salon avec toi et les staffs (ne fonctionne pas)" +
                 " \n /flyer : Affiche le flyer d'un évènement en cours" +
-                " \n /moderation : Active/Désactive la modération auto" +
                 " \n /info : Affiche quelques infos sur le bot" +
                 " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
                 " \n " +
                 " \n **La liste des commandes natives :**" +
                 " \n /hellotest : Test natif"
 
-            };
+                };
+            }
+            else
+            {
+                message = new DiscordEmbedBuilder
+                {
+                    Title = "/help !",
+                    Color = DiscordColor.Gray,
+                    Description = "**La liste des commandes slash :**" +
+                " \n /help : Afficher toutes les commandes et leurs actions" +
+                " \n /hello : Vérifie si le bot fonctionne" +
+                " \n /demineur : Génere une grille de démineur" +
+                " \n /blague : Créer une blague aléatoire" +
+                " \n /send : Permet d'envoyer un message incognito" +
+                " \n /ticket : Créer un salon avec toi et les staffs (ne fonctionne pas)" +
+                " \n /flyer : Affiche le flyer d'un évènement en cours" +
+                " \n /info : Affiche quelques infos sur le bot" +
+                " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
+                " \n " +
+                " \n **La liste des commandes slash admin :**" +
+                " \n /welcome : Message welcome" +
+                " \n /setchannellog : Défini le salon pour les logs" +
+                " \n /setwelcomechannel : Défini le salon pour les messages de bienvenu" +
+                " \n /addrole : Ajoute un rôle à quelqu'un (ne fonctione pas avec un temps)" +
+                " \n /setbotgame : Défini le jeu auquel le bot joue" +
+                " \n /moderation : Active/Désactive la modération auto" +
+                " \n /saveinfo : Affiche les données sauvegardées par le bot" +
+                " \n /ip : Affiche l'adresse ip publique du serveur du bot" +
+                " \n " +
+                " \n **La liste des commandes natives :**" +
+                " \n /hellotest : Test natif"
+
+                };
+            }
+            
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
         }
