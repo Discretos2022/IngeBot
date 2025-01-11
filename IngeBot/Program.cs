@@ -7,7 +7,9 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using System;
+using System.ComponentModel.Design;
 using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 // On Windows   : dotnet publish -c release -r ubuntu.16.04-x64 --self-contained
 // On Windows   : dotnet publish -c release -r win-x86 --self-contained
@@ -226,6 +228,43 @@ namespace IngeBot
                 }
 
             }
+
+
+
+            // Pendu
+
+            string key = Stats.GetPenduKey(e.Author.Id, e.Channel.Id);
+
+            if (Stats.penduDict.ContainsKey(key))
+            {
+                if(e.Message.Content.Length == 1)
+                {
+                    //await e.Channel.SendMessageAsync("lettre : " + e.Message.Content);
+                    Stats.penduDict[key].UpdateWord(e.Message.Content.ToString()[0]);
+                    //await e.Channel.SendMessageAsync("new word : `" + Stats.penduDict[Stats.GetPenduKey(e.Author.Id, e.Channel.Id)].word + "`");
+                    await e.Message.DeleteAsync();
+
+                    var pendu = new DiscordEmbedBuilder
+                    {
+                        Color = DiscordColor.SpringGreen,
+                        //ImageUrl = 
+                        Title = "`" + Stats.penduDict[key].word + "`",
+                        Description = Stats.penduDict[key].GetPenduGFX(),
+                        //Footer = f,
+                    };
+
+                    DiscordMessage m = e.Channel.GetMessageAsync(Stats.penduDict[key].initialMessage).Result;
+                    await m.ModifyAsync(new DiscordMessageBuilder().WithContent("Attention, tu vas te faire pendre, et tu vas rien compendre !").AddEmbed(pendu));
+
+                }
+
+                if (e.Message.Content.ToLower() == "exit")
+                {
+                    Stats.penduDict.Remove(Stats.GetPenduKey(e.Author.Id, e.Channel.Id));
+                    await e.Channel.SendMessageAsync("La partie de pendu a été abandonné !");
+                }
+            }
+
 
         }
 
@@ -467,7 +506,11 @@ namespace IngeBot
 
             else if (e.Interaction.Data.CustomId == "jeudi_soir")
             {// 1167037183861989428
-                await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1167037183861989428));
+
+                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1167037183861989428));
+                else
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1167037183861989428));
                 //await c.SendMessageAsync("Le rôle @JeudiSoir vous à été conféré ! Tu as désormais accès aux salons concernant les évenements du jeudi soir !");
 
 

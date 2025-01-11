@@ -46,7 +46,7 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1.1.1";
+        public static string version = "1.1.1.2";
 
         public static Stopwatch sw = new Stopwatch();
 
@@ -81,6 +81,113 @@ namespace IngeBot
         };
 
         public static List<string> saluts = new List<string> { "salut", "hi ", "bonjour", "slt", "hello", "hallo", "allo", "👋", "ola" };
+
+
+        public static List<string> words = new List<string>();
+
+        public static Dictionary<string, PenduData> penduDict = new Dictionary<string, PenduData>();
+
+        public static string GetPenduKey(ulong user, ulong channel)
+        {
+            return user.ToString() + channel.ToString();
+        }
+
+        public class PenduData
+        {
+
+            public ulong user;
+            public ulong channel;
+            public ulong initialMessage;
+            public List<char> used;
+            public string hidedWord;
+            public string word;
+
+            public PenduData(ulong user, ulong channel) 
+            {
+                this.user = user;
+                this.channel = channel;
+
+                hidedWord = "Discretos";
+                word = "";
+                InitWord();
+
+                used = new List<char>();
+
+            }
+
+            public void SetInitialMess(ulong initialMessage)
+            {
+                this.initialMessage = initialMessage;
+            }
+
+            public void InitWord()
+            {
+                word = "";
+
+                for (int i = 0; i < hidedWord.Length; i++)
+                {
+                    word += "_";
+                }
+
+            }
+
+
+            public void UpdateWord(char letter)
+            {
+                string newWord = "";
+
+                for (int i = 0; i < word.Length; i++)
+                {
+
+                    if (hidedWord[i].ToString().ToLower() == letter.ToString().ToLower())
+                    {
+                        newWord += hidedWord[i];
+                    }
+                    else
+                    {
+                        newWord += word[i];
+                    }
+
+                }
+
+                Console.WriteLine(letter.ToString());
+
+                if(word == newWord)
+                    used.Add(letter);
+
+                word = newWord;
+
+            }
+
+            public string GetPenduGFX()
+            {
+                string result = "";
+
+                result += "```";
+
+                if (used.Count == 0)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |/   |   " + "\n";
+                    result += " |    o   " + "\n";
+                    result += " |   -0-  " + "\n";
+                    result += " |   / \\  " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+
+                result += "```";
+
+                return result;
+
+            }
+
+        }
+
+
 
     }
 }
