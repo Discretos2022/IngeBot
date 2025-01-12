@@ -1001,19 +1001,9 @@ namespace Bot.Modules
                 {
                     Title = "/help !",
                     Color = DiscordColor.Gray,
-                    Description = "**La liste des commandes slash :**" +
-                " \n /help : Afficher toutes les commandes et leurs actions" +
-                " \n /hello : Vérifie si le bot fonctionne" +
-                " \n /demineur : Génere une grille de démineur" +
-                " \n /blague : Créer une blague aléatoire" +
-                " \n /send : Permet d'envoyer un message incognito" +
-                " \n /ticket : Créer un salon avec toi et les staffs (ne fonctionne pas)" +
-                " \n /flyer : Affiche le flyer d'un évènement en cours" +
-                " \n /info : Affiche quelques infos sur le bot" +
-                " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
-                " \n " +
-                " \n **La liste des commandes natives :**" +
-                " \n /hellotest : Test natif"
+                    Description = Stats.SlashCommandBase +
+                                " \n " +
+                                " \n " + Stats.NativeCommandBasic
 
                 };
             }
@@ -1023,19 +1013,9 @@ namespace Bot.Modules
                 {
                     Title = "/help !",
                     Color = DiscordColor.Gray,
-                    Description = "**La liste des commandes slash :**" +
-                " \n /help : Afficher toutes les commandes et leurs actions" +
-                " \n /hello : Vérifie si le bot fonctionne" +
-                " \n /demineur : Génere une grille de démineur" +
-                " \n /blague : Créer une blague aléatoire" +
-                " \n /send : Permet d'envoyer un message incognito" +
-                " \n /ticket : Créer un salon avec toi et les staffs (ne fonctionne pas)" +
-                " \n /flyer : Affiche le flyer d'un évènement en cours" +
-                " \n /info : Affiche quelques infos sur le bot" +
-                " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
-                " \n " +
-                " \n **La liste des commandes natives :**" +
-                " \n /hellotest : Test natif"
+                    Description = Stats.SlashCommandBase +
+                                " \n " +
+                                " \n " + Stats.NativeCommandBasic
 
                 };
             }
@@ -1045,29 +1025,11 @@ namespace Bot.Modules
                 {
                     Title = "/help !",
                     Color = DiscordColor.Gray,
-                    Description = "**La liste des commandes slash :**" +
-                " \n /help : Afficher toutes les commandes et leurs actions" +
-                " \n /hello : Vérifie si le bot fonctionne" +
-                " \n /demineur : Génere une grille de démineur" +
-                " \n /blague : Créer une blague aléatoire" +
-                " \n /send : Permet d'envoyer un message incognito" +
-                " \n /ticket : Créer un salon avec toi et les staffs (ne fonctionne pas)" +
-                " \n /flyer : Affiche le flyer d'un évènement en cours" +
-                " \n /info : Affiche quelques infos sur le bot" +
-                " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
-                " \n " +
-                " \n **La liste des commandes slash admin :**" +
-                " \n /welcome : Message welcome" +
-                " \n /setchannellog : Défini le salon pour les logs" +
-                " \n /setwelcomechannel : Défini le salon pour les messages de bienvenu" +
-                " \n /addrole : Ajoute un rôle à quelqu'un (ne fonctione pas avec un temps)" +
-                " \n /setbotgame : Défini le jeu auquel le bot joue" +
-                " \n /moderation : Active/Désactive la modération auto" +
-                " \n /saveinfo : Affiche les données sauvegardées par le bot" +
-                " \n /ip : Affiche l'adresse ip publique du serveur du bot" +
-                " \n " +
-                " \n **La liste des commandes natives :**" +
-                " \n /hellotest : Test natif"
+                    Description = Stats.SlashCommandBase + 
+                                " \n " +
+                                " \n " + Stats.SlashCommandAdmin +
+                                " \n " +
+                                " \n " + Stats.NativeCommandBasic
 
                 };
             }
@@ -1104,30 +1066,77 @@ namespace Bot.Modules
         }
 
 
-        /*[SlashCommand("pendu", "Créer un pendu !")]
+        [SlashCommand("pendu", "Créer un pendu !")]
         public async Task Pendu(InteractionContext ctx)
         {
 
-            Stats.PenduData data = new Stats.PenduData(ctx.Member.Id, ctx.Interaction.ChannelId);
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            string[] lines = File.ReadAllLines(Directory.GetCurrentDirectory() + "/Data/Bot/word.txt");
+            int r = Random.Shared.Next(0, lines.Length);
+
+            Stats.PenduData data = new Stats.PenduData(lines[r], ctx.Member.Id, ctx.Interaction.ChannelId);
 
             var pendu = new DiscordEmbedBuilder
             {
                 Color = DiscordColor.SpringGreen,
                 //ImageUrl = 
                 Title = "`" + data.word + "`",
-                Description = data.GetPenduGFX(),
+                Description = data.GetPenduGFX() + "" +
+                        "```❌ : ```",
                 //Footer = f,
             };
 
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Attention, tu vas te faire pendre, et tu vas rien compendre !").AddEmbed(pendu));
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Attention, tu vas te faire pendre, et tu vas rien \"compendre\" !").AddEmbed(pendu));
 
             ulong messID = ctx.Interaction.GetOriginalResponseAsync().Result.Id;
 
             data.SetInitialMess(messID);
 
             Stats.penduDict.Add(Stats.GetPenduKey(ctx.Member.Id, ctx.Interaction.ChannelId), data);
+            
+        }
 
-        }*/
+        [SlashCommand("addword", "Ajouter un mot pour le pendu !")]
+        public async Task AddWord(InteractionContext ctx, [Option("Mot", "Mot à ajouter")] string mot)
+        {
+
+            string validLetter = "abcdefjhijklmnopqrstuvwxyz";
+
+            string newWord = mot.ToLower();
+
+            string[] existantWords = File.ReadAllLines(Directory.GetCurrentDirectory() + "/Data/Bot/word.txt");
+
+            for (int i = 0; i < mot.Length; i++)
+            {
+
+                if (!validLetter.Contains(newWord[i]))
+                {
+                    await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le mot `" + mot + "` n'est pas valide, il ne doit contenir que les lettres de base !"));
+                    return;
+                }
+
+            }
+
+            newWord = newWord.Substring(0, 1).ToUpper() + newWord.Substring(1);
+
+            if (existantWords.Contains(newWord))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le mot `" + mot + "` est déjà dans les fichiers du pendu !"));
+                return;
+            }
+
+            List<string> words = new List<string> { newWord };
+            File.AppendAllLines(Directory.GetCurrentDirectory() + "/Data/Bot/word.txt", words);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le mot `" + newWord + "` a bien été ajouté !"));
+
+        }
+
 
 
 

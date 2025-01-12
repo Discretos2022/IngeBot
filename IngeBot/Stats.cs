@@ -46,7 +46,7 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1.1.2";
+        public static string version = "1.1.2.0";
 
         public static Stopwatch sw = new Stopwatch();
 
@@ -83,6 +83,36 @@ namespace IngeBot
         public static List<string> saluts = new List<string> { "salut", "hi ", "bonjour", "slt", "hello", "hallo", "allo", "👋", "ola" };
 
 
+
+        public static string SlashCommandBase = "**La liste des commandes slash :**" +
+                " \n /help : Afficher toutes les commandes et leurs actions" +
+                " \n /hello : Vérifie si le bot fonctionne" +
+                " \n /demineur : Génere une grille de démineur" +
+                " \n /blague : Créer une blague aléatoire" +
+                " \n /send : Permet d'envoyer un message incognito" +
+                " \n /ticket : Créer un salon avec toi et les staffs (ne fonctionne pas)" +
+                " \n /flyer : Affiche le flyer d'un évènement en cours" +
+                " \n /info : Affiche quelques infos sur le bot" +
+                " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
+                " \n /pendu : Jouer au pendu" +
+                " \n /addword : Ajouter un mot pour le pendu";
+
+        public static string SlashCommandAdmin = "**La liste des commandes slash admin :**" +
+                " \n /welcome : Message welcome" +
+                " \n /setchannellog : Défini le salon pour les logs" +
+                " \n /setwelcomechannel : Défini le salon pour les messages de bienvenu" +
+                " \n /addrole : Ajoute un rôle à quelqu'un (ne fonctione pas avec un temps)" +
+                " \n /setbotgame : Défini le jeu auquel le bot joue" +
+                " \n /moderation : Active/Désactive la modération auto" +
+                " \n /saveinfo : Affiche les données sauvegardées par le bot" +
+                " \n /ip : Affiche l'adresse ip publique du serveur du bot";
+
+        public static string NativeCommandBasic = "**La liste des commandes natives :**" +
+                " \n /hellotest : Test natif";
+
+
+
+
         public static List<string> words = new List<string>();
 
         public static Dictionary<string, PenduData> penduDict = new Dictionary<string, PenduData>();
@@ -102,12 +132,12 @@ namespace IngeBot
             public string hidedWord;
             public string word;
 
-            public PenduData(ulong user, ulong channel) 
+            public PenduData(string hidedWord, ulong user, ulong channel) 
             {
                 this.user = user;
                 this.channel = channel;
 
-                hidedWord = "Discretos";
+                this.hidedWord = hidedWord;
                 word = "";
                 InitWord();
 
@@ -153,7 +183,8 @@ namespace IngeBot
                 Console.WriteLine(letter.ToString());
 
                 if(word == newWord)
-                    used.Add(letter);
+                    if(!used.Contains(letter))
+                        used.Add(letter);
 
                 word = newWord;
 
@@ -165,14 +196,145 @@ namespace IngeBot
 
                 result += "```";
 
+
                 if (used.Count == 0)
+                {
+
+                    result += "          " + "\n";
+                    result += "          " + "\n";
+                    result += "          " + "\n";
+                    result += "          " + "\n";
+                    result += "          " + "\n";
+                    result += "          " + "\n";
+                    result += "          " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 1)
+                {
+
+                    result += "          " + "\n";
+                    result += "          " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 2)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 3)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 4)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |/       " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 5)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |/   |   " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 6)
                 {
 
                     result += "          " + "\n";
                     result += " ______   " + "\n";
                     result += " |/   |   " + "\n";
                     result += " |    o   " + "\n";
-                    result += " |   -0-  " + "\n";
+                    result += " |        " + "\n";
+                    result += " |        " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 7)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |/   |   " + "\n";
+                    result += " |    o   " + "\n";
+                    result += " |    █   " + "\n";
+                    result += " |        " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 8)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |/   |   " + "\n";
+                    result += " |    o   " + "\n";
+                    result += " |   ‾█‾  " + "\n";
+                    result += " |        " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 9)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |/   |   " + "\n";
+                    result += " |    o   " + "\n";
+                    result += " |   ‾█‾  " + "\n";
+                    result += " |     \\  " + "\n";
+                    result += "/|\\       " + "\n";
+                    result += "‾‾‾‾‾‾‾‾‾‾" + "\n";
+
+                }
+                else if (used.Count == 10)
+                {
+
+                    result += "          " + "\n";
+                    result += " ______   " + "\n";
+                    result += " |/   |   " + "\n";
+                    result += " |    o   " + "\n";
+                    result += " |   ‾█‾  " + "\n";
                     result += " |   / \\  " + "\n";
                     result += "/|\\       " + "\n";
                     result += "‾‾‾‾‾‾‾‾‾‾" + "\n";

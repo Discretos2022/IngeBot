@@ -244,17 +244,42 @@ namespace IngeBot
                     //await e.Channel.SendMessageAsync("new word : `" + Stats.penduDict[Stats.GetPenduKey(e.Author.Id, e.Channel.Id)].word + "`");
                     await e.Message.DeleteAsync();
 
+                    string letters = "";
+
+                    for (int i = 0; i < Stats.penduDict[key].used.Count; i++)
+                        letters += Stats.penduDict[key].used[i];
+
+                    string result = "";
+
+                    bool finish = false;
+
+                    if (Stats.penduDict[key].used.Count == 10)
+                    {
+                        result = "Perdu ! Le mot à trouver est : ```" + Stats.penduDict[key].hidedWord + "```";
+                        finish = true;
+                    }
+                    if (!Stats.penduDict[key].word.Contains('_'))
+                    {
+                        result = "Gagné ! Tu as trouvé le mot !";
+                        finish = true;
+                    }
+
                     var pendu = new DiscordEmbedBuilder
                     {
                         Color = DiscordColor.SpringGreen,
                         //ImageUrl = 
                         Title = "`" + Stats.penduDict[key].word + "`",
-                        Description = Stats.penduDict[key].GetPenduGFX(),
+                        Description = Stats.penduDict[key].GetPenduGFX() + "" +
+                        "```❌ : " + letters + "```" +
+                        "\n" + result,
                         //Footer = f,
                     };
 
                     DiscordMessage m = e.Channel.GetMessageAsync(Stats.penduDict[key].initialMessage).Result;
-                    await m.ModifyAsync(new DiscordMessageBuilder().WithContent("Attention, tu vas te faire pendre, et tu vas rien compendre !").AddEmbed(pendu));
+                    await m.ModifyAsync(new DiscordMessageBuilder().WithContent("Attention, tu vas te faire pendre, et tu vas rien \"compendre\" !").AddEmbed(pendu));
+
+                    if (finish)
+                        Stats.penduDict.Remove(Stats.GetPenduKey(e.Author.Id, e.Channel.Id));
 
                 }
 
@@ -263,6 +288,7 @@ namespace IngeBot
                     Stats.penduDict.Remove(Stats.GetPenduKey(e.Author.Id, e.Channel.Id));
                     await e.Channel.SendMessageAsync("La partie de pendu a été abandonné !");
                 }
+
             }
 
 
@@ -455,14 +481,10 @@ namespace IngeBot
         private static async Task PressedButton(DiscordClient sender, ComponentInteractionCreateEventArgs e)
         {
 
-            //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Button pressed !"));
-
             var m = await e.Guild.GetMemberAsync(e.User.Id);
             var c = await m.CreateDmChannelAsync();
 
-
             bool welcomeEph = true;
-
 
             if (e.Interaction.Data.CustomId == "game_jam")
             {
@@ -470,13 +492,11 @@ namespace IngeBot
                 if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1160611550063767683)))
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1160611550063767683));
-                    //await c.SendMessageAsync("Le rôle @GameJam vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !");
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle " + e.Guild.GetRole(1160611550063767683).Mention + " vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !").AsEphemeral(welcomeEph));
                 }
                 else
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1160611550063767683));
-                    //await c.SendMessageAsync("Le rôle @GameJam vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !");
 
                     var t = new DiscordEmbedBuilder.EmbedFooter
                     {
@@ -499,20 +519,15 @@ namespace IngeBot
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle " + e.Guild.GetRole(1160611550063767683).Mention + " vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !").AddEmbed(lien).AsEphemeral(welcomeEph));
                 }
 
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
-                await e.Interaction.DeleteOriginalResponseAsync();
             }
-            //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle GameJam vous à été conféré !").AsEphemeral(true));
 
             else if (e.Interaction.Data.CustomId == "jeudi_soir")
-            {// 1167037183861989428
+            {
 
                 if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1167037183861989428));
                 else
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1167037183861989428));
-                //await c.SendMessageAsync("Le rôle @JeudiSoir vous à été conféré ! Tu as désormais accès aux salons concernant les évenements du jeudi soir !");
-
 
                 DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "jeu_soc", "Jeux de société", false);
                 DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeu_vid", "Jeux Vidéo", false);
@@ -533,18 +548,13 @@ namespace IngeBot
                 if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156946871571456040)))
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156946871571456040));
-                    //await c.SendMessageAsync("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !");
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !").AsEphemeral(welcomeEph));
                 }
                 else
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156946871571456040));
-                    //await c.SendMessageAsync("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !");
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !").AsEphemeral(welcomeEph));
                 }
-
-                //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
-                //await e.Interaction.DeleteOriginalResponseAsync();
 
             }
 
@@ -554,20 +564,14 @@ namespace IngeBot
                 if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156942741389987870)))
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156942741389987870));
-                    //await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !");
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !").AsEphemeral(welcomeEph));
-
                 }
                 else
                 {
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156942741389987870));
-                    //await c.SendMessageAsync("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !");
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !").AsEphemeral(welcomeEph));
-
                 }
 
-                //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("...").AsEphemeral(false));
-                //await e.Interaction.DeleteOriginalResponseAsync();
             }
 
             else if (e.Interaction.Data.CustomId == "accept_rules")
@@ -592,7 +596,6 @@ namespace IngeBot
             {
                 DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
                 DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
-                //DiscordButtonComponent b3 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
                 DiscordButtonComponent b100 = new DiscordButtonComponent(ButtonStyle.Primary, "???", "???", true);
 
                 var message = new DiscordEmbedBuilder
