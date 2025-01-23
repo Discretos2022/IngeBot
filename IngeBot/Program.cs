@@ -5,10 +5,12 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Net.Models;
 using DSharpPlus.SlashCommands;
 using System;
 using System.ComponentModel.Design;
 using System.Data;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 // On Windows   : dotnet publish -c release -r ubuntu.16.04-x64 --self-contained
@@ -297,6 +299,8 @@ namespace IngeBot
         private static async Task MessageUpdatedHandler(DiscordClient sender, MessageUpdateEventArgs e)
         {
 
+            if (e.Guild == null) return;
+
             DiscordChannel channel = e.Guild.GetDefaultChannel();
             if (Stats.logChannels.ContainsKey(e.Guild.Id))
                 channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
@@ -339,6 +343,9 @@ namespace IngeBot
 
         private static async Task MessageDeletedHandler(DiscordClient sender, MessageDeleteEventArgs e)
         {
+
+            if (e.Guild == null) return;
+
             DiscordChannel channel = e.Guild.GetDefaultChannel();
 
             if (Stats.logChannels.ContainsKey(e.Guild.Id))
@@ -592,7 +599,7 @@ namespace IngeBot
 
             }
 
-            else if(e.Interaction.Data.CustomId == "hes_yes" || e.Interaction.Data.CustomId == "hes_no")
+            else if (e.Interaction.Data.CustomId == "hes_yes" || e.Interaction.Data.CustomId == "hes_no")
             {
                 DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
                 DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
@@ -630,20 +637,28 @@ namespace IngeBot
             {
                 Console.WriteLine("DATA : " + e.Values[0]);
                 Stats.role = e.Values[0];
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Role Séléctionné : " + e.Guild.GetRole(ulong.Parse(e.Values[0])).Name));
             }
 
             else if (e.Interaction.Data.CustomId == "user")
             {
                 //Console.WriteLine("DATA : " + e.Values[0] + " / " + e.Guild.GetMemberAsync(ulong.Parse(e.Values[0])).Result.ToString());
                 Stats.user = e.Values[0];
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Utilisateur Séléctionné : " + e.Guild.GetMemberAsync(ulong.Parse(e.Values[0])).Result.Nickname));
+
             }
 
             else if (e.Interaction.Data.CustomId == "valid")
             {
 
+                if (Stats.role == "" || Stats.user == "")
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Selectionne un rôle et un utilisateur !"));
+
                 string mess;
-                    
-                if(Stats.date != "")
+
+                if (Stats.date != "")
                 {
 
                     mess = "IngéBot has grant role " + e.Guild.GetRole(ulong.Parse(Stats.role)).Mention.ToString() + " to user " + e.Guild.GetMemberAsync(ulong.Parse(Stats.user)).Result.Mention + " ! (End : " + Stats.date + ")";
@@ -657,10 +672,44 @@ namespace IngeBot
 
             }
 
+            else if (e.Interaction.Data.CustomId == "valid_revoke")
+            {
+
+                if (Stats.role == "" || Stats.user == "")
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Selectionne un rôle et un utilisateur !"));
+
+                string mess;
+
+                mess = "IngéBot has revoke role " + e.Guild.GetRole(ulong.Parse(Stats.role)).Mention.ToString() + " to user " + e.Guild.GetMemberAsync(ulong.Parse(Stats.user)).Result.Mention + " !";
+
+
+                await e.Guild.GetMemberAsync(ulong.Parse(Stats.user)).Result.RevokeRoleAsync(e.Guild.GetRole(ulong.Parse(Stats.role)));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(mess));
+
+                Stats.role = "";
+                Stats.user = "";
+
+            }
+
             else if (e.Interaction.Data.CustomId == "seldate")
             {
                 var modal = new DiscordInteractionResponseBuilder().WithTitle(" Sélectionne une date de fin").WithCustomId("modal_date_role").AddComponents(new TextInputComponent("Date (FORMAT : AAAA.MM.JJ HH.MM.SS) : ", "id_text_date", "Entre la date avec le BON format"));
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+            }
+
+            else if (e.Interaction.Data.CustomId == "archive")
+            {
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Archivage !"));
+
+                var guild = e.Guild;
+                var overwrites = new[]
+                {
+                    new DiscordOverwriteBuilder(e.Guild.EveryoneRole).Deny(Permissions.AccessChannels),
+                    new DiscordOverwriteBuilder(e.Guild.GetRole(1156894465924026438)).Allow(Permissions.AccessChannels),
+                };
+
+                await e.Channel.ModifyAsync(x => x.PermissionOverwrites = overwrites);
+
             }
 
 
@@ -685,6 +734,25 @@ namespace IngeBot
                 Stats.date = e.Values.Values.First();
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le jeu va être mis à jour avec : " + Stats.botGame));
                 await e.Interaction.DeleteOriginalResponseAsync();
+            }
+
+            else if (e.Interaction.Data.CustomId == "event_generator")
+            {
+                string title = e.Values.Values.First();
+                string info = e.Values.Values.ElementAt(1);
+                string url = e.Values.Values.ElementAt(2);
+
+
+                var message = new DiscordEmbedBuilder
+                {
+                    Title = title,
+                    Color = DiscordColor.Yellow,
+                    Description = info,
+                    ImageUrl = url
+                };
+
+
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
             }
 
         }

@@ -4,15 +4,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using IngeBot;
-using System;
-using System.Diagnostics;
-using System.IO;
 using System.Net;
-using static System.Net.Mime.MediaTypeNames;
-using System.Xml.Linq;
-using System.Threading.Channels;
-using System.Security.Cryptography;
-using DSharpPlus.Exceptions;
 
 namespace Bot.Modules
 {
@@ -354,7 +346,7 @@ namespace Bot.Modules
             fs.Close();
 
         }*/
-        
+
         [SlashCommand("addevent", "Une commande pour ajouter des évenements. (admin)")]
         public async Task SendAddEvent(InteractionContext ctx, [Option("Titre", "Titre de l'évenement")] string titre, [Option("Date", "Date de l'évenement")] string date)
         {
@@ -470,7 +462,7 @@ namespace Bot.Modules
                 return;
             }
 
-            if(response == "true" || response == "false")
+            if (response == "true" || response == "false")
             {
                 Directory.CreateDirectory("Data/" + ctx.Guild.Id);
                 string fileName = "Data/" + ctx.Guild.Id + "/save/moderation.txt";
@@ -527,7 +519,7 @@ namespace Bot.Modules
         public async Task Welcome(InteractionContext ctx)
         {
 
-            if(ctx.Guild == null)
+            if (ctx.Guild == null)
             {
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
                 return;
@@ -549,7 +541,7 @@ namespace Bot.Modules
                 Description = "**Veuillez lire et accepter les règles du serveur**" +
                 " \n - Ne pas insulter " +
                 " \n - Être respectueux les uns envers les autres " +
-                " \n - La publicité doit etre permise au préalable par l'un des membres du comité" + 
+                " \n - La publicité doit etre permise au préalable par l'un des membres du comité" +
                 " \n - Restez courtois et respectueux" +
                 " \n - Si le bot a des bugs, dites le nous !"
             };
@@ -566,8 +558,8 @@ namespace Bot.Modules
         }
 
 
-        [SlashCommand("addrole", "Une commande pour ajouter un rôle ! (admin)")]
-        public async Task AddRole(InteractionContext ctx)
+        [SlashCommand("grant", "Une commande pour ajouter un rôle ! (admin)")]
+        public async Task GrantRole(InteractionContext ctx)
         {
 
             if (ctx.Guild == null)
@@ -588,10 +580,13 @@ namespace Bot.Modules
                 return;
             }
 
+            Stats.role = "";
+            Stats.user = "";
+
             DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Success, "valid", "Valider", false);
             DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Success, "seldate", "Date", false);
 
-            if(Stats.mess_role_id != 0)
+            /*if(Stats.mess_role_id != 0)
             {
                 try
                 {
@@ -599,9 +594,55 @@ namespace Bot.Modules
                 }
                 catch(NotFoundException e) { }
 
-            }
+            }*/
 
             var message = new DiscordInteractionResponseBuilder().WithTitle("Ajouter un rôle à un utilisateur").AddComponents(new DiscordRoleSelectComponent("roles", "Roles")).AddComponents(new DiscordUserSelectComponent("user", "Utilisateur")).AddComponents(b1, b2);     //  .AddComponents(new DiscordChannelSelectComponent("123", "1234"));
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
+
+            Stats.mess_role_id = ctx.GetOriginalResponseAsync().Result.Id;
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1).AddComponents(b2).AddComponents(b3));
+
+        }
+
+        [SlashCommand("revoke", "Une commande pour ajouter un rôle ! (admin)")]
+        public async Task RevokeRole(InteractionContext ctx)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            for (int i = 0; i < ctx.Guild.Roles.Count; i++)
+            {
+                Console.WriteLine(ctx.Guild.Roles.ElementAt(i).Value);
+            }
+
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            Stats.role = "";
+            Stats.user = "";
+
+            DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Success, "valid_revoke", "Valider", false);
+
+            /*if(Stats.mess_role_id != 0)
+            {
+                try
+                {
+                    await ctx.Interaction.Channel.GetMessageAsync(Stats.mess_role_id).Result.DeleteAsync();
+                }
+                catch(NotFoundException e) { }
+
+            }*/
+
+            var message = new DiscordInteractionResponseBuilder().WithTitle("Supprimer un rôle à un utilisateur").AddComponents(new DiscordRoleSelectComponent("roles", "Roles")).AddComponents(new DiscordUserSelectComponent("user", "Utilisateur")).AddComponents(b1);     //  .AddComponents(new DiscordChannelSelectComponent("123", "1234"));
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
 
             Stats.mess_role_id = ctx.GetOriginalResponseAsync().Result.Id;
@@ -637,7 +678,7 @@ namespace Bot.Modules
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
 
 
-            Directory.CreateDirectory("Data/" + ctx.Guild.Id);
+            Directory.CreateDirectory("Data/" + ctx.Guild.Id + "/save");
             string fileName = "Data/" + ctx.Guild.Id + "/save/logchannel.txt";
 
             FileStream stream = File.OpenWrite(fileName);
@@ -682,7 +723,7 @@ namespace Bot.Modules
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
 
 
-            Directory.CreateDirectory("Data/" + ctx.Guild.Id);
+            Directory.CreateDirectory("Data/" + ctx.Guild.Id + "/save");
             string fileName = "Data/" + ctx.Guild.Id + "/save/welcomechannel.txt";
 
             FileStream stream = File.OpenWrite(fileName);
@@ -960,7 +1001,7 @@ namespace Bot.Modules
             var message = new DiscordEmbedBuilder
             {
                 Color = DiscordColor.Cyan,
-                Description = b.Split("#")[0] + 
+                Description = b.Split("#")[0] +
                        "\n" + b.Split("#")[1]
             };
 
@@ -1025,7 +1066,7 @@ namespace Bot.Modules
                 {
                     Title = "/help !",
                     Color = DiscordColor.Gray,
-                    Description = Stats.SlashCommandBase + 
+                    Description = Stats.SlashCommandBase +
                                 " \n " +
                                 " \n " + Stats.SlashCommandAdmin +
                                 " \n " +
@@ -1033,28 +1074,37 @@ namespace Bot.Modules
 
                 };
             }
-            
+
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
         }
 
 
         [SlashCommand("ticket", "Une commande pour créer un ticket !")]
-        public async Task CreateTicket(InteractionContext ctx, [Option("Nom", "Message du ticket")] string m)
+        public async Task CreateTicket(InteractionContext ctx, [Option("Nom", "Message du ticket")] string name)
         {
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande ne fonctionne pas encore !").AsEphemeral(false));
 
+            var guild = ctx.Guild;
+            var overwrites = new[]
+            {
+                new DiscordOverwriteBuilder(ctx.Guild.EveryoneRole).Deny(Permissions.AccessChannels),
+                new DiscordOverwriteBuilder(ctx.Guild.GetRole(1156894465924026438)).Allow(Permissions.AccessChannels),
+                new DiscordOverwriteBuilder(ctx.Member).Allow(Permissions.AccessChannels),
+            };
 
-            DiscordChannel c = ctx.Interaction.Guild.CreateChannelAsync(m, ChannelType.Private).Result;
+            var channel = await guild.CreateChannelAsync(name, ChannelType.Text, overwrites: overwrites);
 
-            //c.AddOverwriteAsync(ctx.Member);
+            string contenu = ctx.Member.Mention + " a créer un ticket. " + ctx.Guild.GetRole(1156894465924026438).Mention;
 
+            await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent(contenu).AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "archive", "Archiver", false)));
 
-            //await Program.restClient.EditChannelPermissionsAsync(c.Id, default, Permissions.ManageRoles, default, "test", "test");
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Création du ticket réussi !").AsEphemeral(true));
 
-            //await c.CreateInviteAsync(targetUserId:ctx.Interaction.User.Id);
+            DiscordChannel log = ctx.Guild.GetDefaultChannel();
+            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
+                log = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
+            await log.SendMessageAsync(ctx.Member + " a créé un ticket : " + name);
 
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Création du ticket en cours...").AsEphemeral(false));
         }
 
 
@@ -1098,7 +1148,7 @@ namespace Bot.Modules
             data.SetInitialMess(messID);
 
             Stats.penduDict.Add(Stats.GetPenduKey(ctx.Member.Id, ctx.Interaction.ChannelId), data);
-            
+
         }
 
         [SlashCommand("addword", "Ajouter un mot pour le pendu !")]
@@ -1136,6 +1186,108 @@ namespace Bot.Modules
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le mot `" + newWord + "` a bien été ajouté !"));
 
         }
+
+
+        /*[SlashCommand("deleteallmess", "Supprime tout les messages de ce salon ! (admin)")]
+        public async Task DeleteMessage(InteractionContext ctx)
+        {
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande n'est pas encore au point... "));
+
+            //ulong id = ctx.Channel.LastMessageId.GetValueOrDefault();
+
+            //await ctx.Channel.DeleteMessagesAsync(ctx.Channel.GetMessagesBeforeAsync(id).Result);
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Test ?"));
+
+        }*/
+
+
+        [SlashCommand("createevent", "Créer le message d'évenement ! (admin)")]
+        public async Task EventMess(InteractionContext ctx) // , [Option("Title", "Titre de l'évenement")] string title, [Option("Info", "Info de l'évenement")] string info, [Option("URL", "URL de l'image")] string url
+        {
+
+            var title = new TextInputComponent("Titre : ", "event_title", required: true, style: TextInputStyle.Short);
+            var info = new TextInputComponent("Info : ", "event_info", required: true, style: TextInputStyle.Paragraph);
+            var url = new TextInputComponent("URL de l'image : ", "event_url", required: true, style: TextInputStyle.Short);
+
+
+            var modal = new DiscordInteractionResponseBuilder()
+                .WithTitle("Annonce de jeu")
+                .WithCustomId("event_generator")
+                .AddComponents(title)
+                .AddComponents(info)
+                .AddComponents(url);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+
+            //ulong id = ctx.Channel.LastMessageId.GetValueOrDefault();
+
+            //await ctx.Channel.DeleteMessagesAsync(ctx.Channel.GetMessagesBeforeAsync(id).Result);
+
+            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Test ?"));
+
+        }
+
+
+        /*[SlashCommand("readexcel", "Une commande ! (admin)")]
+        public async Task ChannelLevel(InteractionContext ctx) // , [Option("Title", "Titre de l'évenement")] string title, [Option("Info", "Info de l'évenement")] string info, [Option("URL", "URL de l'image")] string url
+        {
+
+            if (ctx.User.Username != "discretos")
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            string m = "";
+
+            if (File.Exists("Data/1156894161761476648/res/test.csv"))
+            {
+                string[] lines = File.ReadAllLines("Data/1156894161761476648/res/test.csv");
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    Console.WriteLine(lines[i]);
+                    m += lines[i] + "\n";
+                }
+
+                
+
+            }
+
+            
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(m));
+
+        }*/
+
+
+        /*[SlashCommand("level", "Une commande ! (admin)")]
+        public async Task ChannelLevel(InteractionContext ctx) // , [Option("Title", "Titre de l'évenement")] string title, [Option("Info", "Info de l'évenement")] string info, [Option("URL", "URL de l'image")] string url
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            string s = "Channels";
+
+            for (int i = 0; i < ctx.Guild.Channels.Count; i++)
+            {
+
+                if(ctx.Guild.Channels.ElementAt(i).Value.IsThread)
+                    s += "\n" + ctx.Guild.Channels.ElementAt(i).Value.Name;
+
+                Console.WriteLine(ctx.Guild.Channels.ElementAt(i).Value);
+
+            }
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(s));
+
+        }*/
 
 
 
