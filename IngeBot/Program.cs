@@ -11,7 +11,6 @@ using System;
 using System.ComponentModel.Design;
 using System.Data;
 using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 // On Windows   : dotnet publish -c release -r ubuntu.16.04-x64 --self-contained
 // On Windows   : dotnet publish -c release -r win-x86 --self-contained
@@ -472,17 +471,6 @@ namespace IngeBot
 
         }
 
-        private async Task UpdateStatus()
-        {
-
-            
-
-            
-
-        }
-
-
-
 
 
         private static async Task PressedButton(DiscordClient sender, ComponentInteractionCreateEventArgs e)
@@ -528,8 +516,37 @@ namespace IngeBot
 
             }
 
+            else if (e.Interaction.Data.CustomId == "warhammer")
+            {
+
+                /*if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156946871571456040)))
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156946871571456040));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Warhammer vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant l'événement sur Warhammer !").AsEphemeral(welcomeEph));
+                }
+                else
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156946871571456040));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Warhammer vous à été conféré ! Tu as désormais accès aux salons concernant l'événement sur Warhammer !").AsEphemeral(welcomeEph));
+                }*/
+
+
+                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Accepte d'abord les règles avant d'appuyer sur ces boutons !").AsEphemeral(true));
+                else
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("L'événement n'est pas encore totalement prêt ! (Le rôle n'existe pas encore)").AsEphemeral(welcomeEph));
+
+            }
+
             else if (e.Interaction.Data.CustomId == "jeudi_soir")
             {
+
+                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Accepte d'abord les règles avant d'appuyer sur ces boutons !").AsEphemeral(true));
+                    return;
+                }
+
 
                 if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1167037183861989428));
@@ -601,7 +618,7 @@ namespace IngeBot
 
             else if (e.Interaction.Data.CustomId == "hes_yes" || e.Interaction.Data.CustomId == "hes_no")
             {
-                DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
+                /*DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
                 DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
                 DiscordButtonComponent b100 = new DiscordButtonComponent(ButtonStyle.Primary, "???", "???", true);
 
@@ -610,10 +627,10 @@ namespace IngeBot
                     Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
                     Color = DiscordColor.Violet,
                     Description = "Pourquoi êtes-tu ici ?",
-                };
+                };*/
 
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2, b100).AsEphemeral(welcomeEph));
-
+                //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2, b100).AsEphemeral(welcomeEph));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Et bien, bienvenu, voyageur !").AsEphemeral(welcomeEph));
             }
 
 

@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using IngeBot;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace Bot.Modules
@@ -347,7 +348,7 @@ namespace Bot.Modules
 
         }*/
 
-        [SlashCommand("addevent", "Une commande pour ajouter des évenements. (admin)")]
+        /*[SlashCommand("addevent", "Une commande pour ajouter des évenements. (admin)")]
         public async Task SendAddEvent(InteractionContext ctx, [Option("Titre", "Titre de l'évenement")] string titre, [Option("Date", "Date de l'évenement")] string date)
         {
 
@@ -425,7 +426,7 @@ namespace Bot.Modules
 
             }
 
-        }
+        }*/
 
 
         [SlashCommand("flyer", "Un flyer...")]
@@ -543,7 +544,7 @@ namespace Bot.Modules
                 " \n - Être respectueux les uns envers les autres " +
                 " \n - La publicité doit etre permise au préalable par l'un des membres du comité" +
                 " \n - Restez courtois et respectueux" +
-                " \n - Si le bot a des bugs, dites le nous !"
+                " \n - Si le bot a des bugs, dites le nous !",
             };
 
 
@@ -553,7 +554,29 @@ namespace Bot.Modules
 
             await channel.SendMessageAsync("L'utilisateur " + ctx.User.Username + " a utilisé la commande /welcome");
 
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2));
+
+
+
+            DiscordButtonComponent e1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
+            DiscordButtonComponent e2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
+            DiscordButtonComponent e3 = new DiscordButtonComponent(ButtonStyle.Primary, "warhammer", "Warhammer 40K", false);
+            DiscordButtonComponent e100 = new DiscordButtonComponent(ButtonStyle.Primary, "???", "???", true);
+
+            var message2 = new DiscordEmbedBuilder
+            {
+                Title = "Pourquoi êtes-tu ici ?",
+                Color = DiscordColor.Violet,
+                Description = "Tu peux appuyer sur les boutons pour t'ajouter les rôles pour avoir accès aux salons en rapport avec les événements.",
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Welcome message 2.0",
+                },
+            };
+
+            await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message).AddComponents(b1, b2));
+            await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message2).AddComponents(e2, e3, e100));
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Welcome message 2.0").AsEphemeral(true));
 
         }
 
@@ -1151,6 +1174,7 @@ namespace Bot.Modules
 
         }
 
+
         [SlashCommand("addword", "Ajouter un mot pour le pendu !")]
         public async Task AddWord(InteractionContext ctx, [Option("Mot", "Mot à ajouter")] string mot)
         {
@@ -1230,6 +1254,19 @@ namespace Bot.Modules
         }
 
 
+        [SlashCommand("website", "Donne l'url du site !")]
+        public async Task GetURL(InteractionContext ctx)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("https://ingegamez.isc-vs.ch/"));
+        }
+
+        /*[SlashCommand("connection", "???")]
+        public async Task IsConnected(InteractionContext ctx, [Option("user", "???")] DiscordUser user)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(user.Username + " est : " + user.Presence.Status.ToString()));
+        }*/
+
+
         /*[SlashCommand("readexcel", "Une commande ! (admin)")]
         public async Task ChannelLevel(InteractionContext ctx) // , [Option("Title", "Titre de l'évenement")] string title, [Option("Info", "Info de l'évenement")] string info, [Option("URL", "URL de l'image")] string url
         {
@@ -1290,6 +1327,30 @@ namespace Bot.Modules
         }*/
 
 
+        /*[SlashCommand("level", "Montre ton niveau ! (admin)")]
+        public async Task ChannelLevel(InteractionContext ctx) // , [Option("Title", "Titre de l'évenement")] string title, [Option("Info", "Info de l'évenement")] string info, [Option("URL", "URL de l'image")] string url
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+
+            var message2 = new DiscordEmbedBuilder
+            {
+                Title = "Le niveau de " + ctx.Interaction.User.Username,
+                Color = DiscordColor.Violet,
+                Description = "```Level " + 1 +
+                              "\n" + "Next level : " + "[======>   ]```",
+            };
+
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message2));
+
+        }*/
+
 
 
         /*[SlashCommand("welcome", "Une commande pour afficher les règles du serveur ! (admin)")]
@@ -1319,6 +1380,36 @@ namespace Bot.Modules
             //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1, b2, b3));
 
         }*/
+
+
+
+        /*[SlashCommand("roles", "(admin)")]
+        public async Task Role(InteractionContext ctx)
+        {
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+
+            string message = "";
+
+            for (int i = 0; i < ctx.Guild.Roles.Count; i++)
+            {
+                message += ctx.Guild.Roles.ElementAt(i).Value + " \n";
+            }
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(message));
+
+        }*/
+
 
     }
 }
