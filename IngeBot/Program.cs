@@ -541,7 +541,7 @@ namespace IngeBot
             else if (e.Interaction.Data.CustomId == "jeudi_soir")
             {
 
-                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
+                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1354869344370163952)))
                 {
                     await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Accepte d'abord les règles avant d'appuyer sur ces boutons !").AsEphemeral(true));
                     return;
@@ -602,6 +602,9 @@ namespace IngeBot
             {
                 await c.SendMessageAsync("Tu as accepté les règles ! Sage décision !");
 
+
+                await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1354869344370163952));
+
                 DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "hes_yes", "HES", false);
                 DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "hes_no", "Hors HES", false);
 
@@ -643,6 +646,9 @@ namespace IngeBot
                     channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
 
                 await channel.SendMessageAsync(e.Interaction.User.Username + " n'a pas accepté les règles...");
+
+                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1354869344370163952)))
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1354869344370163952));
 
                 await c.SendMessageAsync("Tu n'as pas accepté les règles ? Pourquoi ? Si il y a un problème avec, parles-en avec un @ingénieurs.");
 
