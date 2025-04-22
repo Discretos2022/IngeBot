@@ -3,9 +3,12 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.VoiceNext;
 using IngeBot;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Threading.Channels;
 
 namespace Bot.Modules
 {
@@ -1260,6 +1263,41 @@ namespace Bot.Modules
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("https://ingegamez.isc-vs.ch/"));
         }
 
+
+
+
+
+        [SlashCommand("minecraft", "Une commande pour afficher le message pour Minecraft ! (admin)")]
+        public async Task Minecraft(InteractionContext ctx)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Success, "addminecraft", "Prendre le rôle", false);
+            DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Success, "remminecraft", "Retirer le rôle", false);
+
+
+            var message = new DiscordInteractionResponseBuilder().WithTitle("Vouz pouvez vous ajouter ou supprimer le rôle @Minecraft avec ces boutons").AddComponents(b1, b2);     //  .AddComponents(new DiscordChannelSelectComponent("123", "1234"));
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
+
+        }
+
+
+
+
+
+
+
         /*[SlashCommand("connection", "???")]
         public async Task IsConnected(InteractionContext ctx, [Option("user", "???")] DiscordUser user)
         {
@@ -1409,6 +1447,114 @@ namespace Bot.Modules
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(message));
 
         }*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*[SlashCommand("join", "3754")]
+        public async Task JoinCommand(InteractionContext ctx, [Option("salon", "Titre de l'évenement")] DiscordChannel channel)
+        {
+            channel ??= ctx.Member.VoiceState?.Channel;
+            await channel.ConnectAsync();
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Connection au salon vocal " + channel.Mention + " réussi !"));
+
+        }
+
+        [SlashCommand("play", "7483")]
+        public async Task PlayCommand(InteractionContext ctx, [Choice("Super Mario", "mario.mp3")][Choice("Worms", "worms.wav")][Choice(".", ".")][Option("Son", "Son")] string path)
+        {
+            var vnext = ctx.Client.GetVoiceNext();
+            var connection = vnext.GetConnection(ctx.Guild);
+
+            var transmit = connection.GetTransmitSink();
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le son " + path + " est joué !"));
+
+            var pcm = ConvertAudioToPcm(path);
+            await pcm.CopyToAsync(transmit);
+            await pcm.DisposeAsync();
+
+        }
+
+        [SlashCommand("leave", "4037")]
+        public async Task LeaveCommand(InteractionContext ctx)
+        {
+            var vnext = ctx.Client.GetVoiceNext();
+            var connection = vnext.GetConnection(ctx.Guild);
+            connection.Disconnect();
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Deconnection du salon vocal réussi !"));
+
+        }
+
+
+        private Stream ConvertAudioToPcm(string filePath)
+        {
+            var ffmpeg = Process.Start(new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = $@"-i ""{filePath}"" -ac 2 -f s16le -ar 48000 pipe:1",
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            });
+
+            return ffmpeg.StandardOutput.BaseStream;
+        }
+
+
+
+
+        [SlashCommand("level", "Montre ton niveau ! (admin)")]
+        public async Task ChannelLevel(InteractionContext ctx) // , [Option("Title", "Titre de l'évenement")] string title, [Option("Info", "Info de l'évenement")] string info, [Option("URL", "URL de l'image")] string url
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+
+            var message2 = new DiscordEmbedBuilder
+            {
+                Title = "Le niveau de " + ctx.Interaction.User.Username,
+                Color = DiscordColor.Yellow,
+                Description = "Nombre de messages envoyés : " + Stats.userMessages[ctx.Interaction.User.Id]
+                //Description = "```Level " + 1 +
+                              //"\n" + "Next level : " + "[======>   ]```",
+            };
+
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message2));
+
+        }*/
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     }

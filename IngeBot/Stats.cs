@@ -46,13 +46,15 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1.4.0";
+        public static string version = "1.1.4.2";
 
         public static Stopwatch sw = new Stopwatch();
 
 
         public static Dictionary<ulong, ulong> logChannels = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, ulong> welcomeChannels = new Dictionary<ulong, ulong>();
+
+        //public static Dictionary<ulong, int> userMessages = new Dictionary<ulong, int>();
 
 
         public static bool ContainsRole(DiscordMember member, string role)

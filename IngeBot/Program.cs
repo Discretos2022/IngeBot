@@ -7,6 +7,7 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Net.Models;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.VoiceNext;
 using System;
 using System.ComponentModel.Design;
 using System.Data;
@@ -128,6 +129,8 @@ namespace IngeBot
             cExtension.RegisterCommands<Commands>();
             slashUserCommandsConfiguration.RegisterCommands<SlashCommands>();
 
+            client.UseVoiceNext();
+
             await client.ConnectAsync(status: UserStatus.Online); // new DiscordActivity("Bang", ActivityType.Playing), 
 
             statusThread = new Thread(() => UpdateStatusLoop());
@@ -144,6 +147,56 @@ namespace IngeBot
 
         private static async Task MessageCreatedHandler(DiscordClient sender, MessageCreateEventArgs e)
         {
+
+            /*if (Stats.userMessages.ContainsKey(e.Author.Id))
+            {
+                Stats.userMessages[e.Author.Id] += 1;
+
+                try
+                {
+                    //Pass the filepath and filename to the StreamWriter Constructor
+                    StreamWriter sw = new StreamWriter("Test.txt");
+                    for (int i = 0; i < Stats.userMessages.Count; i++)
+                        sw.WriteLine(Stats.userMessages.Keys.ElementAt(i) + "," + Stats.userMessages[Stats.userMessages.Keys.ElementAt(i)]);
+                    sw.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception: " + ex.Message);
+                }
+                finally
+                {
+                    Console.WriteLine("Executing finally block.");
+                }
+
+            }
+
+            else if (!Stats.userMessages.ContainsKey(e.Author.Id))
+            {
+                Stats.userMessages.Add(e.Author.Id, 1);
+
+                try
+                {
+                    //Pass the filepath and filename to the StreamWriter Constructor
+                    StreamWriter sw = new StreamWriter("Test.txt");
+                    for(int i = 0; i < Stats.userMessages.Count; i++)
+                        sw.WriteLine(Stats.userMessages.Keys.ElementAt(i) + "," + Stats.userMessages[Stats.userMessages.Keys.ElementAt(i)]);
+                    sw.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Exception: " + ex.Message);
+                }
+                finally
+                {
+                    Console.WriteLine("Executing finally block.");
+                }
+
+            }*/
+
+
+
+
             if (e.Message.Content.ToLower().Contains("cd"))
                 await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":CD2000x:")); // DiscordAttachment
 
@@ -732,6 +785,32 @@ namespace IngeBot
                 };
 
                 await e.Channel.ModifyAsync(x => x.PermissionOverwrites = overwrites);
+
+            }
+
+            else if (e.Interaction.Data.CustomId == "addminecraft")
+            {
+
+                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1364176381440950314)))
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1364176381440950314));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Minecraft vous à été conféré ! Tu as désormais accès aux salons concernant Minecraft !").AsEphemeral(welcomeEph));
+                }
+                else
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu as déjà le rôle pour Minecraft !").AsEphemeral(welcomeEph));
+
+            }
+
+            else if (e.Interaction.Data.CustomId == "remminecraft")
+            {
+
+                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1364176381440950314)))
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1364176381440950314));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Minecraft vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant Minecraft !").AsEphemeral(welcomeEph));
+                }
+                else
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'as pas le rôle pour Minecraft, je ne peux pas te l'enlever !").AsEphemeral(welcomeEph));
 
             }
 
