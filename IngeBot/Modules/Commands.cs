@@ -1293,6 +1293,48 @@ namespace Bot.Modules
         }
 
 
+        [SlashCommand("mcstatus", "Une commande pour afficher l'état du serveur Minecraft !")]
+        public async Task MinecraftStatus(InteractionContext ctx)
+        {
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Ping..."));
+
+            string fileName = Token.MC_STATUS_PATH;
+
+            Process p = new Process();
+            p.StartInfo = new ProcessStartInfo(Token.PYTHON_PATH, fileName)
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = false
+            };
+            p.Start();
+
+            string output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+
+            Console.WriteLine(output);
+
+            string[] str = output.Split("\n");
+
+
+            var message = new DiscordEmbedBuilder
+            {
+                Color = DiscordColor.Green,
+                Title = "Minecraft Java Server Status",
+                Description = "```" +
+                "\n" +        "Version : " + str[0] +
+                "\n" +        "Latency : " + str[3].Substring(0, 5) + " ms" +
+                "\n" +       $"Players : {str[1].Substring(0, str[1].Length - 1)} / {str[2]}" +
+                "```",
+            };
+
+            await ctx.Interaction.DeleteOriginalResponseAsync();
+            await ctx.Interaction.Channel.SendMessageAsync(embed: message);
+
+        }
+
+
 
 
 
