@@ -1325,7 +1325,7 @@ namespace Bot.Modules
                 Description = "```" +
                 "\n" +        "Version : " + str[0] +
                 "\n" +        "Latency : " + str[3].Substring(0, 5) + " ms" +
-                "\n" +       $"Players : {str[1].Substring(0, str[1].Length - 1)} / {str[2]}" +
+                "\n" +       $"Players : {str[1]} / {str[2]}" +                 // str[1].Substring(0, str[1].Length - 1)
                 "```",
             };
 
