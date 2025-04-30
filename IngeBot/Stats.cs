@@ -46,13 +46,15 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1.4.3.1";
+        public static string version = "1.1.5";
 
         public static Stopwatch sw = new Stopwatch();
 
 
         public static Dictionary<ulong, ulong> logChannels = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, ulong> welcomeChannels = new Dictionary<ulong, ulong>();
+
+        public static Dictionary<string, string> welcomeButtons = new Dictionary<string, string>();
 
         //public static Dictionary<ulong, int> userMessages = new Dictionary<ulong, int>();
 

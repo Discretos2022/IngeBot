@@ -1340,6 +1340,146 @@ namespace Bot.Modules
 
 
 
+
+        [SlashCommand("welcome3", "Une commande pour dire BIENVENU 3.0 ! (admin)")]
+        public async Task Welcome3(InteractionContext ctx, [Option("Builder", "Constructeur pour les boutons")] string builder)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            if (!Stats.ContainsRole(ctx.Member, Stats.adminRole)) // ctx.User.Username != "discretos" && 
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Success, "accept_rules", "Accepter", false);
+            DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Danger, "no_accept_rules", "Refuser", false);
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
+                Color = DiscordColor.Violet,
+                Description = "**Veuillez lire et accepter les règles du serveur**" +
+                " \n - Ne pas insulter " +
+                " \n - Être respectueux les uns envers les autres " +
+                " \n - La publicité doit etre permise au préalable par l'un des membres du comité" +
+                " \n - Restez courtois et respectueux" +
+                " \n - Si le bot a des bugs, dites le nous !",
+            };
+
+
+            DiscordChannel channel = ctx.Guild.GetDefaultChannel();
+            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
+                channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
+
+            await channel.SendMessageAsync("L'utilisateur " + ctx.User.Username + " a utilisé la commande /welcome3 [`" + builder + "`]");
+
+
+
+            Stats.welcomeButtons.Clear();
+
+            string[] split = builder.Split("/");
+
+            DiscordButtonComponent[] buttons = new DiscordButtonComponent[split.Length];
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                buttons[i] = new DiscordButtonComponent(ButtonStyle.Primary, split[i].Split(":")[0], split[i].Split(":")[0], false);
+                Stats.welcomeButtons.Add(split[i].Split(":")[0], split[i].Split(":")[1].Substring(3, split[i].Split(":")[1].Length - 4));
+            }
+
+
+            var message2 = new DiscordEmbedBuilder
+            {
+                Title = "Pourquoi êtes-tu ici ?",
+                Color = DiscordColor.Violet,
+                Description = "Tu peux appuyer sur les boutons pour t'ajouter les rôles pour avoir accès aux salons en rapport avec les événements.",
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Welcome message 3.0",
+                },
+            };
+
+            DiscordMessageBuilder mBuilder = new DiscordMessageBuilder();
+            mBuilder.AddEmbed(message2);
+
+            for (int i = 0; i < buttons.Chunk(5).Count(); i++)
+                mBuilder.AddComponents(buttons.Chunk(5).ToList()[i]);
+
+
+            await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message).AddComponents(b1, b2));
+            await ctx.Channel.SendMessageAsync(mBuilder);
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Welcome message 2.0").AsEphemeral(true));
+
+        }
+
+
+
+        [SlashCommand("update", "Une commande pour mettre le bot à jour ! (admin)")]
+        public async Task Update(InteractionContext ctx)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Mise à jour ..."));
+
+            Process p = new Process();
+            p.StartInfo = new ProcessStartInfo("./autoexe.sh")
+            {
+                UseShellExecute = true,
+                CreateNoWindow = false,
+                WorkingDirectory = "../../../../.."
+            };
+            p.Start();
+
+            Console.WriteLine("MISE A JOUR");
+
+            p.WaitForExit();
+
+            await ctx.Interaction.Channel.SendMessageAsync("Mise à jour terminé !");
+
+            Console.WriteLine("MISE A JOUR TERMINE");
+
+
+
+            Process p2 = new Process();
+            p2.StartInfo = new ProcessStartInfo("./IngeBot")
+            {
+                UseShellExecute = true,
+                CreateNoWindow = true,
+            };
+
+            await ctx.Interaction.Channel.SendMessageAsync("Redémarrage en cours ...");
+            p2.Start();
+
+            Environment.Exit(0);
+
+        }
+
+
+
+
+
+
+
+
         /*[SlashCommand("connection", "???")]
         public async Task IsConnected(InteractionContext ctx, [Option("user", "???")] DiscordUser user)
         {
@@ -1463,7 +1603,7 @@ namespace Bot.Modules
 
 
 
-        /*[SlashCommand("roles", "(admin)")]
+        [SlashCommand("roles", "(admin)")]
         public async Task Role(InteractionContext ctx)
         {
             if (ctx.Guild == null)
@@ -1479,16 +1619,18 @@ namespace Bot.Modules
             }
 
 
-            string message = "";
+            string message = "```";
 
             for (int i = 0; i < ctx.Guild.Roles.Count; i++)
             {
                 message += ctx.Guild.Roles.ElementAt(i).Value + " \n";
             }
 
+            message += "```";
+
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(message));
 
-        }*/
+        }
 
 
 
