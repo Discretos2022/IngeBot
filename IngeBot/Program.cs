@@ -840,6 +840,23 @@ namespace IngeBot
 
             }
 
+            if(e.Guild.GetRole(ulong.Parse(e.Interaction.Data.CustomId)) != null)
+            {
+                ulong id = ulong.Parse(e.Interaction.Data.CustomId);
+
+                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(id)))
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(id));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le rôle {e.Guild.GetRole(id).Mention} vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant {e.Guild.GetRole(ulong.Parse(e.Interaction.Data.CustomId)).Name} !").AsEphemeral(welcomeEph));
+                }
+                else
+                {
+                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(id));
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le rôle {e.Guild.GetRole(id).Mention} vous à été conféré ! Tu as désormais accès aux salons concernant {e.Guild.GetRole(ulong.Parse(e.Interaction.Data.CustomId)).Name} !").AsEphemeral(welcomeEph));
+                }
+
+            }
+
 
             //else
             //await c.SendMessageAsync("a, ... ce bouton ne doit pas être là...");
