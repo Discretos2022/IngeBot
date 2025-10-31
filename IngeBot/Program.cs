@@ -389,7 +389,7 @@ namespace IngeBot
             };
 
 
-            if (e.Author.Username != "IngéBot")
+            if (e.Author.Username != "IngéBot" && e.Author.Username != "IngéBot_Bêta")
                 await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message));
         }
 
@@ -788,57 +788,6 @@ namespace IngeBot
 
             }
 
-            else if (e.Interaction.Data.CustomId == "addminecraft")
-            {
-
-                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1364176381440950314)))
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1364176381440950314));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Minecraft vous à été conféré ! Tu as désormais accès aux salons concernant Minecraft !").AsEphemeral(welcomeEph));
-                }
-                else
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu as déjà le rôle pour Minecraft !").AsEphemeral(welcomeEph));
-
-            }
-
-            else if (e.Interaction.Data.CustomId == "remminecraft")
-            {
-
-                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1364176381440950314)))
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1364176381440950314));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Minecraft vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant Minecraft !").AsEphemeral(welcomeEph));
-                }
-                else
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'as pas le rôle pour Minecraft, je ne peux pas te l'enlever !").AsEphemeral(welcomeEph));
-
-            }
-
-            else
-            {
-
-                foreach(KeyValuePair<string, string> val in Stats.welcomeButtons)
-                {
-                    if(e.Interaction.Data.CustomId == val.Key)
-                    {
-
-                        ulong id = ulong.Parse(val.Value);
-
-                        if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(id)))
-                        {
-                            await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(id));
-                            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le rôle {e.Guild.GetRole(id).Mention} vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant {val.Key} !").AsEphemeral(welcomeEph));
-                        }
-                        else
-                        {
-                            await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(id));
-                            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le rôle {e.Guild.GetRole(id).Mention} vous à été conféré ! Tu as désormais accès aux salons concernant {val.Key} !").AsEphemeral(welcomeEph));
-                        }
-                    }
-                        
-                }
-
-            }
 
             if(e.Guild.GetRole(ulong.Parse(e.Interaction.Data.CustomId)) != null)
             {
@@ -893,7 +842,12 @@ namespace IngeBot
                     Title = title,
                     Color = DiscordColor.Yellow,
                     Description = info,
-                    ImageUrl = url
+                    ImageUrl = url,
+                    Footer = new DiscordEmbedBuilder.EmbedFooter
+                    {
+                        IconUrl = client.CurrentUser.AvatarUrl,
+                        Text = "Event Generator 1.0",
+                    },
                 };
 
 

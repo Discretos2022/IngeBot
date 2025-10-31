@@ -46,15 +46,13 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1.5.1";
+        public static string version = "1.1.5.2";
 
         public static Stopwatch sw = new Stopwatch();
 
 
         public static Dictionary<ulong, ulong> logChannels = new Dictionary<ulong, ulong>();
         public static Dictionary<ulong, ulong> welcomeChannels = new Dictionary<ulong, ulong>();
-
-        public static Dictionary<string, string> welcomeButtons = new Dictionary<string, string>();
 
         //public static Dictionary<ulong, int> userMessages = new Dictionary<ulong, int>();
 
@@ -95,23 +93,27 @@ namespace IngeBot
                 " \n /blague : Créer une blague aléatoire" +
                 " \n /send : Permet d'envoyer un message incognito" +
                 " \n /ticket : Créer un salon avec toi et les staffs (ne fonctionne pas)" +
-                " \n /flyer : Affiche le flyer d'un évènement en cours" +
                 " \n /info : Affiche quelques infos sur le bot" +
                 " \n /runtime : Affiche le temps pendant lequel le bot ne s'est pas arrêté" +
+                " \n /latency : Affiche le temps de latence de la connexion du bot" +
                 " \n /pendu : Jouer au pendu" +
                 " \n /addword : Ajouter un mot pour le pendu" +
+                " \n /website : Affiche le lien du site de l'association" +
+                " \n /mcstatus : Affiche l'état du serveur Minecraft" +
                 " \n /ticket : Créer un salon avec toi et les staffs";
 
         public static string SlashCommandAdmin = "**La liste des commandes slash admin :**" +
-                " \n /welcome : Message welcome" +
+                " \n /welcome : Message welcome 4.0, sans états." +
                 " \n /setchannellog : Défini le salon pour les logs" +
                 " \n /setwelcomechannel : Défini le salon pour les messages de bienvenu" +
                 " \n /grant : Ajoute un rôle à quelqu'un (ne fonctione pas avec un temps)" +
                 " \n /revoke : Enlève un rôle à quelqu'un" +
                 " \n /setbotgame : Défini le jeu auquel le bot joue" +
                 " \n /moderation : Active/Désactive la modération auto" +
-                " \n /saveinfo : Affiche les données sauvegardées par le bot" +
-                " \n /createevent : Génere le message d'évènement avec une image et du texte" +
+                " \n /config : Affiche les données sauvegardées (log channel, modération, ...)" +
+                " \n /event : Génere le message d'évènement avec une image et du texte" +
+                " \n /roles : Affiche tous les rôles du serveur" +
+                " \n /update : Met à jour le bot avec le repo Github" +
                 " \n /ip : Affiche l'adresse ip publique du serveur du bot";
 
         public static string NativeCommandBasic = "**La liste des commandes natives :**" +
