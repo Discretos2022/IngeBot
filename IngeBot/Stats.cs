@@ -6,30 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
-/*
-
-Role 1168496848391127134; YAGPDB.xyz
-Role 1156894465924026438; ingénieurs
-Role 1156894161761476648; @everyone
-Role 1319636688691007488; IngéBot
-Role 1168864525542490132; bots
-Role 1156942741389987870; jeux-vidéo
-Role 1156946871571456040; jeux société
-Role 1169423512147070999; Mudae
-Role 1319643473137242125; IngeBot_Beta
-Role 1169422452628140033; invité hors HES
-Role 1169423334862237771; DraftBot
-Role 1168494505729740834; Pancake
-Role 1160611550063767683; Game Jam Participant
-Role 1217909889167265802; Warhammer~master
-Role 1167037183861989428; Thursday gamEZ
-
-Guild 1169326745384648714; Dimension Discretos
-Guild 1156894161761476648; IngéGamEZ
-
- */
-
 namespace IngeBot
 {
     public static class Stats
@@ -46,7 +22,7 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1.5.2";
+        public static string version = "1.1.5.3";
 
         public static Stopwatch sw = new Stopwatch();
 
@@ -357,8 +333,6 @@ namespace IngeBot
             }
 
         }
-
-
 
     }
 }

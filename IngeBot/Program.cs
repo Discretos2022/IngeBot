@@ -17,8 +17,6 @@ using System.Xml.Linq;
 // On Windows   : dotnet publish -c release -r win-x86 --self-contained
 // On Linux     : chmod 777 ./IngeBot
 
-// Figgle.FiggleFonts.Standard.Render("Hello, World!")
-
 namespace IngeBot
 {
     internal class Program
@@ -88,9 +86,6 @@ namespace IngeBot
             var discordConfig = new DiscordConfiguration()
             {
                 Intents = DiscordIntents.All,
-
-                // Version Bêta     : MTMxODk2ODg3NTg3ODA1NTkzNg.Gsc7u6.K0qlw-PUGsupdoxbKyFWYs7E6YTeBO0Rl9HJ9Y
-                // Version Stable   : MTMxNjg1NjY5NzI4NDcyMjczMA.GFdwui.lxUXaUgfYsyWEiFze5FXkpwW_L_CcjNCqBIjRM
                 Token = Token.token,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true
@@ -131,7 +126,7 @@ namespace IngeBot
 
             client.UseVoiceNext();
 
-            await client.ConnectAsync(status: UserStatus.Online); // new DiscordActivity("Bang", ActivityType.Playing), 
+            await client.ConnectAsync(status: UserStatus.Online); 
 
             statusThread = new Thread(() => UpdateStatusLoop());
             statusThread.Start();
@@ -148,60 +143,8 @@ namespace IngeBot
         private static async Task MessageCreatedHandler(DiscordClient sender, MessageCreateEventArgs e)
         {
 
-            /*if (Stats.userMessages.ContainsKey(e.Author.Id))
-            {
-                Stats.userMessages[e.Author.Id] += 1;
-
-                try
-                {
-                    //Pass the filepath and filename to the StreamWriter Constructor
-                    StreamWriter sw = new StreamWriter("Test.txt");
-                    for (int i = 0; i < Stats.userMessages.Count; i++)
-                        sw.WriteLine(Stats.userMessages.Keys.ElementAt(i) + "," + Stats.userMessages[Stats.userMessages.Keys.ElementAt(i)]);
-                    sw.Close();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception: " + ex.Message);
-                }
-                finally
-                {
-                    Console.WriteLine("Executing finally block.");
-                }
-
-            }
-
-            else if (!Stats.userMessages.ContainsKey(e.Author.Id))
-            {
-                Stats.userMessages.Add(e.Author.Id, 1);
-
-                try
-                {
-                    //Pass the filepath and filename to the StreamWriter Constructor
-                    StreamWriter sw = new StreamWriter("Test.txt");
-                    for(int i = 0; i < Stats.userMessages.Count; i++)
-                        sw.WriteLine(Stats.userMessages.Keys.ElementAt(i) + "," + Stats.userMessages[Stats.userMessages.Keys.ElementAt(i)]);
-                    sw.Close();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Exception: " + ex.Message);
-                }
-                finally
-                {
-                    Console.WriteLine("Executing finally block.");
-                }
-
-            }*/
-
-
-
-
             if (e.Message.Content.ToLower().Contains("cd"))
                 await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":CD2000x:")); // DiscordAttachment
-
-            //if (e.Message.Author.Username == "discretos") //  || e.Message.Author.Username == "mimisorrey"
-                //await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":cd:"));
 
             foreach (string i in Stats.saluts)
                 if (e.Message.Content.ToLower().Contains(i))
@@ -209,9 +152,6 @@ namespace IngeBot
                     await e.Message.CreateReactionAsync(DiscordEmoji.FromName(sender, ":wave:")); // DiscordAttachment
                     break;
                 }
-
-            //if (e.Author.Username != "ThunderBot")
-            //await e.Message.RespondAsync("Server : " + e.Guild.Name + " / " + e.Channel.Name + " / " + e.Author.Mention + " / " + e.Author.AvatarUrl + " / " + e.Guild.IconUrl); // "Tu parles beaucoup !"
 
             if (Stats.moderationEnabled)
             {
@@ -373,10 +313,7 @@ namespace IngeBot
             var message = new DiscordEmbedBuilder
             {
                 
-
                 Footer = t,
-
-                // = ,
                 Title = "Message modifié par " + e.Guild.GetMemberAsync(e.Message.Author.Id).Result.Nickname + " dans " + e.Channel.Mention,
                 Color = DiscordColor.SpringGreen,
                 Description = "**Ancien : **" +
@@ -390,7 +327,8 @@ namespace IngeBot
 
 
             if (e.Author.Username != "IngéBot" && e.Author.Username != "IngéBot_Bêta")
-                await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message));
+                if (oldMess != e.Message.Content)
+                    await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message));
         }
 
         private static async Task MessageDeletedHandler(DiscordClient sender, MessageDeleteEventArgs e)
@@ -472,7 +410,6 @@ namespace IngeBot
         {
             return Task.CompletedTask;
         }
-
 
 
         private void UpdateStatusLoop()
