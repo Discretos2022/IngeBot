@@ -5,8 +5,10 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.VoiceNext;
 using IngeBot;
+using IngeBot.DelayerEngine;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net;
 using System.Threading.Channels;
 
@@ -800,6 +802,12 @@ namespace Bot.Modules
         public async Task EventMess(InteractionContext ctx)
         {
 
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
             var title = new TextInputComponent("Titre : ", "event_title", "Le titre de l'évenement", required: true, style: TextInputStyle.Short);
             var info = new TextInputComponent("Info : ", "event_info", "Description...", required: true, style: TextInputStyle.Paragraph);
             var url = new TextInputComponent("URL de l'image : ", "event_url", "Le lien vers l'image", required: false, style: TextInputStyle.Short);
@@ -1223,6 +1231,281 @@ namespace Bot.Modules
                 };
                 await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(error));
             }
+
+        }
+
+
+        [SlashCommand("message-time", "Créer un message programmé ! (admin)")]
+        public async Task MessageTime(InteractionContext ctx)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            var name = new TextInputComponent("Nom du message", "message_name", "Ne doit pas déjà être utilisé sur un autre message !", required: true, style: TextInputStyle.Short);
+            var text = new TextInputComponent("Message : ", "message", "Le message...", required: true, style: TextInputStyle.Paragraph);
+            var date = new TextInputComponent("Date et heure de l'envoi : ", "message_time", "Format : 2025/01/01 12:45", required: true, style: TextInputStyle.Short);
+
+            var modal = new DiscordInteractionResponseBuilder()
+                .WithTitle("Nouveau message programmé")
+                .WithCustomId("message-time-generator")
+                .AddComponents(name)
+                .AddComponents(text)
+                .AddComponents(date);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+
+        }
+
+        [SlashCommand("message-time-list", "Retourne la liste des messages programmés ! (admin)")]
+        public async Task MessageTimeList(InteractionContext ctx)
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+
+            var msg = new DiscordEmbedBuilder
+            {
+                Title = "Les messages programmés :",
+                Color = DiscordColor.Azure,
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Message Time System 1.0",
+                },
+            };
+
+            List<ChronoInstructionBase> messages = ChronoSystem.instructions.Where((e) => e.Value.GuildId == ctx.Guild.Id.ToString() && e.Value.InstructionType == ChronoSystem.InstructionType.MessageTime).Select(e => e.Value).ToList();
+
+            for (int i = 0; i < messages.Count; i++)
+            {
+                msg.Description += "`" + messages[i].Name.Substring(2) + "`" + " - " + "`" + messages[i].Date + "`" + "\n";
+            }
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg));
+
+        }
+
+
+        [SlashCommand("message-time-get", "Retourne le message programmé avec ce nom ! (admin)")]
+        public async Task MessageTimeGet(InteractionContext ctx, [Option("Nom", "Nom du message")] string name)
+        {
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            if (!ChronoSystem.instructions.TryGetValue((int)ChronoSystem.InstructionType.MessageTime + "_" + name, out var message))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($":warning: Le message `{name}` n'existe pas ! Afficher la liste des messages programmés avec `/message-time-list`."));
+                return;
+            }
+
+
+            var msg = new DiscordEmbedBuilder
+            {
+                Title = $"Résumé du message programmé `{name}` :",
+                Color = DiscordColor.Gray,
+                Description = ((MessageTime)message).Text + "\n Le message sera envoyé le : \n `" + message.Date + "`",
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Message Time System 1.0",
+                },
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg));
+        }
+
+
+        [SlashCommand("message-time-del", "Supprimer un message programmé ! (admin)")]
+        public async Task MessageTimeDelete(InteractionContext ctx)
+        {
+
+            List<ChronoInstructionBase> ms = ChronoSystem.instructions.Where((e) => e.Value.GuildId == ctx.Guild.Id.ToString() && e.Value.InstructionType == ChronoSystem.InstructionType.MessageTime).Select(e => e.Value).ToList();
+
+            List<DiscordSelectComponentOption> options = new List<DiscordSelectComponentOption>();
+
+            for (int i = 0; i < ms.Count; i++)
+            {
+                options.Add(new DiscordSelectComponentOption(ms[i].Name.Substring(2), ms[i].Name));
+            }
+
+            if (options.Count == 0)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Il n'y a pas de message programmé !"));
+                return;
+            }
+
+            var msg = new DiscordEmbedBuilder
+            {
+                Title = $"Veux-tu supprimer un message ?",
+                Color = DiscordColor.Orange,
+                Description = "Quel message veux-tu supprimer ?",
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Message Time System 1.0",
+                },
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg).AddComponents(new DiscordSelectComponent("msg_time_del", "Message", options)));
+
+        }
+
+
+        [SlashCommand("anniversaire-set", "Ajouter ton anniversaire !")]
+        public async Task SetBirthday(InteractionContext ctx, [Option("Date", "Format : 2025/01/01")] string date)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            if (!DateTime.TryParseExact(date, "yyyy/MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date doit avoir ce format : `yyyy/MM/dd`"));
+                return;
+            }
+
+            string baseDate = date;
+
+            date += " 09:00";
+
+            date = date.Substring(4);
+
+            TimeSpan time = ChronoSystem.GetTimeSpan(DateTime.Now.Year + date);
+            if (time.Ticks <= 0)
+                date = (DateTime.Now.Year + 1) + date;
+            else
+                date = DateTime.Now.Year + date;
+
+            string name = ctx.Interaction.User.Id.ToString();
+            string text = "# Joyeux anniversaire " + ctx.Interaction.User.Mention;
+
+            DiscordChannel channel = ctx.Interaction.Guild.GetDefaultChannel();
+            if (Stats.welcomeChannels.ContainsKey(ctx.Interaction.Guild.Id))
+                channel = ctx.Interaction.Guild.GetChannel(Stats.welcomeChannels[ctx.Interaction.Guild.Id]);
+
+            MessageBirthday mb = new MessageBirthday(name, text, date, baseDate, ctx.Guild.Id.ToString(), channel.Id.ToString());
+
+            await ChronoSystem.RegisterChronoInstruction(mb, ctx.Interaction);
+
+        }
+
+        [SlashCommand("anniversaire-del", "Supprimer ton anniversaire !")]
+        public async Task DeleteBirthday(InteractionContext ctx)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            string name = (int)ChronoSystem.InstructionType.MessageBirthday + "_" + ctx.Interaction.User.Id.ToString();
+
+            await ChronoSystem.UnregisterChronoInstruction(name, ctx.Interaction);
+
+        }
+
+        [SlashCommand("anniversaire", "Donne la date à laquelle tu as défini ton anniversaire !")]
+        public async Task GetBirthday(InteractionContext ctx)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            string name = (int)ChronoSystem.InstructionType.MessageBirthday + "_" + ctx.Interaction.User.Id.ToString();
+
+            if (ChronoSystem.instructions.TryGetValue(name, out var instruction))
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Ton anniversaire est défini le : `{((MessageBirthday)instruction).BaseDate}`"));
+            else
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'as pas défini ton anniversaire. Tu peux le définir avec `/anniversaire-set`"));
+
+
+        }
+
+
+        [SlashCommand("setrole-2-0", "Permet de donner un rôle temporaire à un membre du serveur ! (admin)")]
+        public async Task SetRole(InteractionContext ctx, [Option("Nom", "Permet, après, de le supprimer à partir de son nom.")] string name, [Option("Utilisateur", "L'utilisateur")] DiscordUser user, [Option("Rôle", "Le rôle")] DiscordRole role, [Option("Début", "Format : 2025/01/01 ou -")] string start, [Option("Fin", "Format : 2025/01/01 ou -")] string end)
+        {
+
+            if (ctx.Guild == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                return;
+            }
+
+            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                return;
+            }
+
+            string instrName = (int)ChronoSystem.InstructionType.RoleTime + "_" + name;
+
+
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "Résumé du rôle temporaire :",
+                Color = DiscordColor.Gray,
+                Description = $"{user.Mention}\n{role.Mention}\n{start}\n{end}",
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.User.AvatarUrl,
+                    Text = "Chrono Time System 1.0",
+                },
+            };
+
+
+            if (!DateTime.TryParseExact(start, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _) && start != "-")
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date de début doit avoir ce format : `yyyy/MM/dd HH:mm`"));
+                return;
+            }
+
+            if (!DateTime.TryParseExact(end, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _) && end != "-")
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date de début doit avoir ce format : `yyyy/MM/dd HH:mm`"));
+                return;
+            }
+
+            string date = start;
+            if (start == "-")
+                date = DateTime.Now.AddSeconds(1).ToString("yyyy/MM/dd HH:mm");
+
+            RoleTime mb = new RoleTime(name, start, end, user.Id.ToString(), role.Id.ToString(), date, ctx.Guild.Id.ToString(), ctx.Channel.Id.ToString());
+
+            await ChronoSystem.RegisterChronoInstruction(mb, ctx.Interaction);
+
 
         }
 

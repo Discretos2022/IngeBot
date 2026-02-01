@@ -8,9 +8,11 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Net.Models;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.VoiceNext;
+using IngeBot.DelayerEngine;
 using System;
 using System.ComponentModel.Design;
 using System.Data;
+using System.Globalization;
 using System.Xml.Linq;
 
 // On Windows   : dotnet publish -c release -r ubuntu.16.04-x64 --self-contained
@@ -82,7 +84,6 @@ namespace IngeBot
             }
 
 
-
             var discordConfig = new DiscordConfiguration()
             {
                 Intents = DiscordIntents.All,
@@ -106,6 +107,7 @@ namespace IngeBot
             client.GuildMemberRemoved += GuildMemberRemovedHandler;
             client.ComponentInteractionCreated += PressedButton;
             client.ModalSubmitted += ModalHandler;
+            client.GuildDownloadCompleted += AfterGuildsLoading;
 
             client.GuildRoleCreated += RoleCreatedHandler;
 
@@ -126,10 +128,10 @@ namespace IngeBot
 
             client.UseVoiceNext();
 
-            await client.ConnectAsync(status: UserStatus.Online); 
+            await client.ConnectAsync(status: UserStatus.Online);
 
-            statusThread = new Thread(() => UpdateStatusLoop());
-            statusThread.Start();
+            //statusThread = new Thread(() => UpdateStatusLoop());
+            //statusThread.Start();
 
             restClient = new DiscordRestClient(discordConfig);
 
@@ -725,8 +727,51 @@ namespace IngeBot
 
             }
 
+            else if (e.Interaction.Data.CustomId == "msg_time_del")
+            {
 
-            if(e.Guild.GetRole(ulong.Parse(e.Interaction.Data.CustomId)) != null)
+                //MessageTimeStruct mts = MessageTimeManager.GetMessageTime(e.Interaction.Data.Values[0], e.Interaction.Guild.Id);
+
+                //MessageTimeManager.Result result = MessageTimeManager.DeleteMessageTime(e.Interaction.Data.Values[0], e.Interaction.Guild.Id);
+
+                //if (result == MessageTimeManager.Result.Success)
+                //{
+
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le message `" + e.Interaction.Data.Values[0] + "`" + " a été supprimé !"));
+
+                //    var message = new DiscordEmbedBuilder
+                //    {
+                //        Title = "Message supprimé :",
+                //        Color = DiscordColor.Gray,
+                //        Description = mts.Text + "\n Date d'envoi : \n `" + mts.Date + "`",
+                //        Footer = new DiscordEmbedBuilder.EmbedFooter
+                //        {
+                //            IconUrl = client.CurrentUser.AvatarUrl,
+                //            Text = "Message Time System 1.0",
+                //        },
+                //    };
+
+                //    DiscordChannel channel = e.Interaction.Guild.GetDefaultChannel();
+                //    if (Stats.logChannels.ContainsKey(e.Interaction.Guild.Id))
+                //        channel = e.Interaction.Guild.GetChannel(Stats.logChannels[e.Interaction.Guild.Id]);
+                //    await channel.SendMessageAsync(message);
+
+                //}
+                //else if (result == MessageTimeManager.Result.CannotDelete)
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le message `" + e.Interaction.Data.Values[0] + "`" + " ne peut pas être supprimé car c'est un message système généré par le bot !"));
+                //else if (result == MessageTimeManager.Result.NotExist)
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le message `" + e.Interaction.Data.Values[0] + "`" + " n'existe pas !"));
+                //else if (result == MessageTimeManager.Result.Error)
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Une erreur est survenu, demande à Discretos..."));
+
+                string name = e.Interaction.Data.Values[0];
+
+                await ChronoSystem.UnregisterChronoInstruction(name, e.Interaction);
+
+            }
+
+
+            if (e.Guild.GetRole(ulong.Parse(e.Interaction.Data.CustomId)) != null)
             {
                 ulong id = ulong.Parse(e.Interaction.Data.CustomId);
 
@@ -791,6 +836,89 @@ namespace IngeBot
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
             }
 
+            else if (e.Interaction.Data.CustomId == "message-time-generator")
+            {
+                string name = e.Values.Values.First();
+                string text = e.Values.Values.ElementAt(1);
+                string date = e.Values.Values.ElementAt(2);
+
+
+                var message = new DiscordEmbedBuilder
+                {
+                    Title = "Résumé du nouveau message programmé :",
+                    Color = DiscordColor.Gray,
+                    Description = text + "\n\n Le message sera envoyé le : \n `" + date + "`",
+                    Footer = new DiscordEmbedBuilder.EmbedFooter
+                    {
+                        IconUrl = client.CurrentUser.AvatarUrl,
+                        Text = "Message Time System 1.0",
+                    },
+                };
+
+
+                if (!DateTime.TryParseExact(date, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date doit avoir ce format : `yyyy/MM/dd`"));
+                    return;
+                }
+
+                MessageTime mb = new MessageTime(name, text, false.ToString(), date, e.Interaction.Guild.Id.ToString(), e.Interaction.Channel.Id.ToString());
+
+                await ChronoSystem.RegisterChronoInstruction(mb, e.Interaction);
+
+
+
+                //MessageTimeManager.Result success = MessageTimeManager.CreateNewMessageTime(client, e.Interaction.Guild.Id, e.Interaction.Channel.Id, name, date, text);
+
+                //if (success == MessageTimeManager.Result.Success)
+                //{
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AsEphemeral(true));
+
+                //    DiscordChannel channel = e.Interaction.Guild.GetDefaultChannel();
+                //    if (Stats.logChannels.ContainsKey(e.Interaction.Guild.Id))
+                //        channel = e.Interaction.Guild.GetChannel(Stats.logChannels[e.Interaction.Guild.Id]);
+                //    await channel.SendMessageAsync(message);
+
+                //}
+
+                //else if (success == MessageTimeManager.Result.AlreadyExist)
+                //{
+
+                //    message.Title = $":warning: Un message avec le nom {name} existe déjà !";
+                //    message.Color = DiscordColor.Red;
+                //    message.Description = text + "\n\n Le message NE sera PAS envoyé le : \n `" + date + "`";
+
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AsEphemeral(true));
+                //}
+
+                //else if (success == MessageTimeManager.Result.BadFormatName)
+                //{
+
+                //    message.Title = $":warning: Le nom \"{name}\" n'est pas valide ! Il ne doit pas contenir de caractères spéciaux.";
+                //    message.Color = DiscordColor.Red;
+                //    message.Description = text + "\n\n Le message NE sera PAS envoyé le : \n `" + date + "`";
+
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AsEphemeral(true));
+                //}
+
+                //else if (success == MessageTimeManager.Result.BadFormatDate)
+                //{
+
+                //    message.Title = $":warning: La date \"{date}\" n'est pas valide ! Le format doit être yyyy/MM/dd HH:mm.";
+                //    message.Color = DiscordColor.Red;
+                //    message.Description = text + "\n\n Le message NE sera PAS envoyé.";
+
+                //    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AsEphemeral(true));
+                //}
+
+            }
+
+        }
+
+        private static async Task AfterGuildsLoading(DiscordClient sender, GuildDownloadCompletedEventArgs e)
+        {
+            // _ = MessageTimeManager.InitMessageTimeFromFolder(client);
+            ChronoSystem.Initialize(client);
         }
 
     }
