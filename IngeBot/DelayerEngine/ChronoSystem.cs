@@ -10,8 +10,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using static IngeBot.MessageTimeManager;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace IngeBot.DelayerEngine
 {

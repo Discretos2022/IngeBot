@@ -5,19 +5,11 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.Net.Models;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.VoiceNext;
 using IngeBot.DelayerEngine;
 using System;
-using System.ComponentModel.Design;
-using System.Data;
 using System.Globalization;
-using System.Xml.Linq;
-
-// On Windows   : dotnet publish -c release -r ubuntu.16.04-x64 --self-contained
-// On Windows   : dotnet publish -c release -r win-x86 --self-contained
-// On Linux     : chmod 777 ./IngeBot
 
 namespace IngeBot
 {
@@ -109,6 +101,9 @@ namespace IngeBot
             client.ModalSubmitted += ModalHandler;
             client.GuildDownloadCompleted += AfterGuildsLoading;
 
+            client.SocketClosed += SocketClosedHandler;
+            client.SocketErrored += SocketErroredHandler;
+
             client.GuildRoleCreated += RoleCreatedHandler;
 
             var commandsConfig = new CommandsNextConfiguration
@@ -140,7 +135,6 @@ namespace IngeBot
             await Task.Delay(-1);
 
         }
-
 
         private static async Task MessageCreatedHandler(DiscordClient sender, MessageCreateEventArgs e)
         {
@@ -917,8 +911,19 @@ namespace IngeBot
 
         private static async Task AfterGuildsLoading(DiscordClient sender, GuildDownloadCompletedEventArgs e)
         {
-            // _ = MessageTimeManager.InitMessageTimeFromFolder(client);
             ChronoSystem.Initialize(client);
+        }
+
+        private async Task SocketClosedHandler(DiscordClient sender, SocketCloseEventArgs args)
+        {
+            Console.WriteLine("Socket Closed : Restart...");
+            Environment.Exit(0);
+        }
+
+        private async Task SocketErroredHandler(DiscordClient sender, SocketErrorEventArgs args)
+        {
+            Console.WriteLine("Socket Error : Restart...");
+            Environment.Exit(0);
         }
 
     }
