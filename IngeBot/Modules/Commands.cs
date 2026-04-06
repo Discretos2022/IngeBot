@@ -6,11 +6,11 @@ using DSharpPlus.SlashCommands;
 using DSharpPlus.VoiceNext;
 using IngeBot;
 using IngeBot.DelayerEngine;
+using IngeBot.Models;
+using IngeBot.Services;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net;
-using System.Threading.Channels;
 
 namespace Bot.Modules
 {
@@ -155,26 +155,19 @@ namespace Bot.Modules
 
             if (response == "true" || response == "false")
             {
-                Directory.CreateDirectory("Data/" + ctx.Guild.Id);
-                string fileName = "Data/" + ctx.Guild.Id + "/save/moderation.txt";
 
-                FileStream stream = File.OpenWrite(fileName);
-                StreamWriter file = new StreamWriter(stream);
+                Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.MODERATION);
+                if (param == null) param = new Parameter((long)ctx.Guild.Id, Parameter.MODERATION, "");
 
-                file.WriteLine(response);
-                file.Close();
+                param.value = response;
+                param.Save();
+
             }
 
             if (response == "true")
-            {
-                Stats.moderationEnabled = true;
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le système de modération a été activé !"));
-            }
             else if (response == "false")
-            {
-                Stats.moderationEnabled = false;
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le système de modération a été désactivé !"));
-            }
             else
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La commande n'est pas valide !"));
 
@@ -289,33 +282,16 @@ namespace Bot.Modules
                 return;
             }
 
-            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
-                Stats.logChannels.Remove(ctx.Guild.Id);
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.LOG_CHANNEL);
+            if (param == null) param = new Parameter((long)ctx.Guild.Id, Parameter.LOG_CHANNEL, "");
 
-            Stats.logChannels.Add(ctx.Guild.Id, ctx.Channel.Id);
-
+            param.value = ctx.Channel.Id.ToString();
+            param.Save();
 
             var message = new DiscordInteractionResponseBuilder().WithContent("Le salon pour les logs viens d'être défini dans : " + ctx.Channel.Mention);
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
 
-
-            Directory.CreateDirectory("Data/" + ctx.Guild.Id + "/save");
-            string fileName = "Data/" + ctx.Guild.Id + "/save/logchannel.txt";
-
-            FileStream stream = File.OpenWrite(fileName);
-            StreamWriter file = new StreamWriter(stream);
-
-            file.WriteLine(ctx.Channel.Id);
-            file.Close();
-
-
-            DiscordChannel channel = ctx.Guild.GetDefaultChannel();
-            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
-                channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
-
-            await channel.SendMessageAsync("Le salon de log a été défini dans " + channel.Name + " par " + ctx.User.Username + ".");
-
-            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Pourquoi êtes-vous ici ?").AddComponents(b1).AddComponents(b2).AddComponents(b3));
+            await MessageHelper.Log(ctx.Guild, "Le salon de log a été défini dans " + ctx.Channel.Name + " par " + ctx.User.Username + ".");
 
         }
 
@@ -335,30 +311,16 @@ namespace Bot.Modules
                 return;
             }
 
-            if (Stats.welcomeChannels.ContainsKey(ctx.Guild.Id))
-                Stats.welcomeChannels.Remove(ctx.Guild.Id);
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.WELCOME_CHANNEL);
+            if (param == null) param = new Parameter((long)ctx.Guild.Id, Parameter.WELCOME_CHANNEL, "");
 
-            Stats.welcomeChannels.Add(ctx.Guild.Id, ctx.Channel.Id);
+            param.value = ctx.Channel.Id.ToString();
+            param.Save();
 
             var message = new DiscordInteractionResponseBuilder().WithContent("Le salon pour les bienvenus viens d'être défini dans : " + ctx.Channel.Mention);
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, message);
 
-
-            Directory.CreateDirectory("Data/" + ctx.Guild.Id + "/save");
-            string fileName = "Data/" + ctx.Guild.Id + "/save/welcomechannel.txt";
-
-            FileStream stream = File.OpenWrite(fileName);
-            StreamWriter file = new StreamWriter(stream);
-
-            file.WriteLine(ctx.Channel.Id);
-            file.Close();
-
-            DiscordChannel channel = ctx.Guild.GetDefaultChannel();
-            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
-                channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
-
-            await channel.SendMessageAsync("Le salon de bienvenu a été défini dans " + channel.Name + " par " + ctx.User.Username + ".");
-
+            await MessageHelper.Log(ctx.Guild, "Le salon de bienvenu a été défini dans " + ctx.Channel.Name + " par " + ctx.User.Username + ".");
         }
 
 
@@ -570,6 +532,18 @@ namespace Bot.Modules
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données..."));
 
 
+            Parameter? logChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.LOG_CHANNEL);
+            string logChannel = logChannelParam?.value ?? "";
+            logChannel = ctx.Guild.GetChannel(ulong.Parse(logChannel))?.Mention ?? "-";
+
+            Parameter? welcomeChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.WELCOME_CHANNEL);
+            string welcomeChannel = welcomeChannelParam?.value ?? "";
+            welcomeChannel = ctx.Guild.GetChannel(ulong.Parse(welcomeChannel))?.Mention ?? "-";
+
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.MODERATION);
+            string moderationParam = param?.value ?? "false";
+            bool moderation = bool.Parse((moderationParam == "true" || moderationParam == "false") ? moderationParam : "false");
+
             var m = new DiscordEmbedBuilder
             {
                 Title = "Données sauvegardées par IngéBot",
@@ -579,13 +553,13 @@ namespace Bot.Modules
 
             m.Description += "**Channel : **";
             m.Description += "\n";
-            m.Description += "Log Channel : " + ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]).Mention;
+            m.Description += "Log Channel : " + logChannel;
             m.Description += "\n";
-            m.Description += "Welcome Channel : " + ctx.Guild.GetChannel(Stats.welcomeChannels[ctx.Guild.Id]).Mention;
+            m.Description += "Welcome Channel : " + welcomeChannel;
             m.Description += "\n\n";
             m.Description += "**Modération : **";
             m.Description += "\n";
-            m.Description += "Modération : " + Stats.moderationEnabled;
+            m.Description += "Modération : " + moderation;
 
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(m));
 
@@ -709,10 +683,7 @@ namespace Bot.Modules
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Création du ticket réussi !").AsEphemeral(true));
 
-            DiscordChannel log = ctx.Guild.GetDefaultChannel();
-            if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
-                log = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
-            await log.SendMessageAsync(ctx.Member + " a créé un ticket : " + name);
+            await MessageHelper.Log(ctx.Guild, ctx.Member + " a créé un ticket : " + name);
 
         }
 
@@ -1177,11 +1148,7 @@ namespace Bot.Modules
                 };
 
 
-                DiscordChannel channel = ctx.Guild.GetDefaultChannel();
-                if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
-                    channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
-
-                await channel.SendMessageAsync("L'utilisateur " + ctx.User.Username + " a utilisé la commande /welcome [`" + builder + "`]");
+                await MessageHelper.Log(ctx.Guild, "L'utilisateur " + ctx.User.Username + " a utilisé la commande /welcome [`" + builder + "`]");
 
 
 
@@ -1406,9 +1373,10 @@ namespace Bot.Modules
             string name = ctx.Interaction.User.Id.ToString();
             string text = "# Joyeux anniversaire " + ctx.Interaction.User.Mention;
 
-            DiscordChannel channel = ctx.Interaction.Guild.GetDefaultChannel();
-            if (Stats.welcomeChannels.ContainsKey(ctx.Interaction.Guild.Id))
-                channel = ctx.Interaction.Guild.GetChannel(Stats.welcomeChannels[ctx.Interaction.Guild.Id]);
+
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.WELCOME_CHANNEL);
+
+            DiscordChannel channel = ctx.Interaction.Guild.GetChannel(ulong.Parse(param?.value ?? "0")) ?? ctx.Interaction.Guild.GetDefaultChannel();
 
             MessageBirthday mb = new MessageBirthday(name, text, date, baseDate, ctx.Guild.Id.ToString(), channel.Id.ToString());
 

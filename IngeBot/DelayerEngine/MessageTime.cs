@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using IngeBot.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,11 +85,7 @@ namespace IngeBot.DelayerEngine
 
                     await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AsEphemeral(true));
 
-                    DiscordChannel channel = ctx.Guild.GetDefaultChannel();
-                    if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
-                        channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
-                    await channel.SendMessageAsync(message);
-
+                    await MessageHelper.Log(ctx.Guild, new DiscordMessageBuilder().AddEmbed(message));
                 }
 
             }

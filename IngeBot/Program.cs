@@ -8,6 +8,8 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.VoiceNext;
 using IngeBot.DelayerEngine;
+using IngeBot.Models;
+using IngeBot.Services;
 using System;
 using System.Globalization;
 
@@ -34,52 +36,17 @@ namespace IngeBot
             else if (IntPtr.Size == 4)
                 Console.WriteLine("IngéBot " + Stats.version + " x86 (c) 2024 Joshua Siedel");
 
-            /*string file = "Data/defaultChannel.txt";
-            string[] lines = File.ReadAllLines(file);
-            Stats.logChannel = lines[0];
 
-            string file2 = "Data/welcomeChannel.txt";
-            string[] lines2 = File.ReadAllLines(file2);
-            Stats.welcomeChannel = lines2[0];*/
+            Configuration config = EnvLoader.LoadEnv();
+            Console.WriteLine("Config File Loaded !");
 
-            string[] dirs = Directory.GetDirectories("Data");
-
-            for (int i = 0; i < dirs.Length; i++)
-            {
-
-                if (File.Exists(dirs[i] + "/save/logchannel.txt"))
-                {
-                    string[] lines = File.ReadAllLines(dirs[i] + "/save/logchannel.txt");
-                    Stats.logChannels.Add(ulong.Parse(dirs[i].Split(new char[] { '\\', '/' })[1]), ulong.Parse(lines[0]));
-                }
-
-                if (File.Exists(dirs[i] + "/save/welcomechannel.txt"))
-                {
-                    string[] lines = File.ReadAllLines(dirs[i] + "/save/welcomechannel.txt");
-                    Stats.welcomeChannels.Add(ulong.Parse(dirs[i].Split(new char[] { '\\', '/' })[1]), ulong.Parse(lines[0]));
-                }
-
-                if (File.Exists(dirs[i] + "/save/moderation.txt"))
-                {
-                    string[] lines = File.ReadAllLines(dirs[i] + "/save/moderation.txt");
-                    try
-                    {
-                        Stats.moderationEnabled = bool.Parse(lines[0]);
-                    }
-                    catch(FormatException e)
-                    {
-                        Console.WriteLine("Bad format moderation !");
-                        Stats.moderationEnabled = false;
-                    }
-                }
-
-            }
+            DatabaseSystem.Init(config.DataBaseHost, config.DataBasePort, config.DataBaseUsername, config.DataBasePassword, config.DataBaseName);
 
 
             var discordConfig = new DiscordConfiguration()
             {
                 Intents = DiscordIntents.All,
-                Token = Token.token,
+                Token = config.DiscordToken,
                 TokenType = TokenType.Bot,
                 AutoReconnect = true
             };
@@ -103,6 +70,7 @@ namespace IngeBot
 
             client.SocketClosed += SocketClosedHandler;
             client.SocketErrored += SocketErroredHandler;
+            client.Zombied += ZombiedHandler;
 
             client.GuildRoleCreated += RoleCreatedHandler;
 
@@ -123,7 +91,15 @@ namespace IngeBot
 
             client.UseVoiceNext();
 
-            await client.ConnectAsync(status: UserStatus.Online);
+            try
+            {
+                await client.ConnectAsync(status: UserStatus.Online);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Discord Connection Has Failed !");
+                Environment.Exit(1);
+            }
 
             //statusThread = new Thread(() => UpdateStatusLoop());
             //statusThread.Start();
@@ -149,7 +125,11 @@ namespace IngeBot
                     break;
                 }
 
-            if (Stats.moderationEnabled)
+            Parameter? param = Parameter.FindByGuildIdAndKey(e.Guild.Id, Parameter.MODERATION);
+            string moderationParam = param?.value ?? "false";
+            bool moderation = bool.Parse((moderationParam == "true" || moderationParam == "false") ? moderationParam : "false");
+
+            if (moderation)
             {
 
                 if (e.Message.Content.Contains("merde"))
@@ -289,11 +269,6 @@ namespace IngeBot
 
             if (e.Guild == null) return;
 
-            DiscordChannel channel = e.Guild.GetDefaultChannel();
-            if (Stats.logChannels.ContainsKey(e.Guild.Id))
-                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
-
-
             string oldMess = "";
             if (e.MessageBefore == null)
                 oldMess = "/!\\ Il y a une erreur !";
@@ -324,18 +299,13 @@ namespace IngeBot
 
             if (e.Author.Username != "IngéBot" && e.Author.Username != "IngéBot_Bêta")
                 if (oldMess != e.Message.Content)
-                    await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(message));
+                    await MessageHelper.Log(e.Guild, new DiscordMessageBuilder().AddEmbed(message));
         }
 
         private static async Task MessageDeletedHandler(DiscordClient sender, MessageDeleteEventArgs e)
         {
 
             if (e.Guild == null) return;
-
-            DiscordChannel channel = e.Guild.GetDefaultChannel();
-
-            if (Stats.logChannels.ContainsKey(e.Guild.Id))
-                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
 
             string oldMess = e.Message.Content;
             if (e.Message.Content == "")
@@ -358,46 +328,32 @@ namespace IngeBot
 
             if(e.Message.Author != null)
             {
-                if (e.Message.Author.Username != "IngéBot")
-                    await channel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(deleted));
-                //else
-                    //await channel.SendMessageAsync(new DiscordMessageBuilder().WithContent("L'utilisateur " + "ERREUR" + " a supprimé un message.").AddEmbed(deleted));
-
+                if (e.Message.Author.Username != "IngéBot" && e.Message.Author.Username != "IngéBot_Bêta")
+                    await MessageHelper.Log(e.Guild, new DiscordMessageBuilder().AddEmbed(deleted));
             }
 
         }
 
         private static async Task GuildMemberAddedHandler(DiscordClient sender, GuildMemberAddEventArgs e)
         {
-
-            DiscordChannel channel = e.Guild.GetDefaultChannel();
-
-            if (Stats.welcomeChannels.ContainsKey(e.Guild.Id))
-                channel = e.Guild.GetChannel(Stats.welcomeChannels[e.Guild.Id]);
-
-            await channel.SendMessageAsync("Bienvenu sur le serveur !   Accueillez : " + e.Member.DisplayName);
+            await MessageHelper.Welcome(e.Guild, "Bienvenu sur le serveur !   Accueillez : " + e.Member.DisplayName);
         }
 
         private static async Task GuildMemberRemovedHandler(DiscordClient sender, GuildMemberRemoveEventArgs e)
         {
-
-            DiscordChannel channel = e.Guild.GetDefaultChannel();
-
-            if (Stats.logChannels.ContainsKey(e.Guild.Id))
-                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
-
-            await channel.SendMessageAsync(e.Member.DisplayName + " est partie...");
+            await MessageHelper.Log(e.Guild, e.Member.DisplayName + " est partie...");
         }
 
         private static async Task RoleCreatedHandler(DiscordClient sender, GuildRoleCreateEventArgs e)
         {
 
-            DiscordChannel channel = e.Guild.GetDefaultChannel();
+            var audits = await e.Guild.GetAuditLogsAsync(1, action_type: AuditLogActionType.RoleCreate);
+            var entry = audits.FirstOrDefault();
+            var user = entry?.UserResponsible;
 
-            if (Stats.logChannels.ContainsKey(e.Guild.Id))
-                channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
+            string author = user?.Username ?? "inconnu";
 
-            await channel.SendMessageAsync("Le role " + e.Role.Mention + " a été créer par " + sender.CurrentUser.Username + ".");
+            await MessageHelper.Log(e.Guild, "Le role " + e.Role.Mention + " a été créer par " + author + ".");
         }
 
 
@@ -408,54 +364,54 @@ namespace IngeBot
         }
 
 
-        private void UpdateStatusLoop()
-        {
+        //private void UpdateStatusLoop()
+        //{
 
-            while (true)
-            {
+        //    while (true)
+        //    {
 
-                // Bonne année !
-                if (DateTime.Now.Day == 01 && DateTime.Now.Month == 01 && DateTime.Now.Hour == 00 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
-                {
+        //        // Bonne année !
+        //        if (DateTime.Now.Day == 01 && DateTime.Now.Month == 01 && DateTime.Now.Hour == 00 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
+        //        {
 
-                    DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
+        //            DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
 
-                    if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
-                        channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
+        //            if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
+        //                channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
 
-                    /*var mess = new DiscordEmbedBuilder
-                    {
-                        Color = DiscordColor.Red,
-                        Title = "ℬ𝒪𝒩𝒩ℰ 𝒜𝒩𝒩ℰℰ 𝟚𝟘𝟚𝟝 !",
-                    };*/
+        //            /*var mess = new DiscordEmbedBuilder
+        //            {
+        //                Color = DiscordColor.Red,
+        //                Title = "ℬ𝒪𝒩𝒩ℰ 𝒜𝒩𝒩ℰℰ 𝟚𝟘𝟚𝟝 !",
+        //            };*/
 
-                    channel.SendMessageAsync("Bonne année 𝟚𝟘𝟚𝟝 !");
+        //            channel.SendMessageAsync("Bonne année 𝟚𝟘𝟚𝟝 !");
 
-                }
+        //        }
 
-                // Joyeux Noel !
-                if (DateTime.Now.Day == 25 && DateTime.Now.Month == 12 && DateTime.Now.Hour == 09 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
-                {
+        //        // Joyeux Noel !
+        //        if (DateTime.Now.Day == 25 && DateTime.Now.Month == 12 && DateTime.Now.Hour == 09 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
+        //        {
 
-                    DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
+        //            DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
 
-                    if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
-                        channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
+        //            if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
+        //                channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
 
-                    var mess = new DiscordEmbedBuilder
-                    {
-                        Color = DiscordColor.Red,
-                        Title = "𝒥𝑜𝓎𝑒𝓊𝓍 𝒩𝑜𝑒𝓁 *!*",
-                    };
+        //            var mess = new DiscordEmbedBuilder
+        //            {
+        //                Color = DiscordColor.Red,
+        //                Title = "𝒥𝑜𝓎𝑒𝓊𝓍 𝒩𝑜𝑒𝓁 *!*",
+        //            };
 
-                    channel.SendMessageAsync(mess);
+        //            channel.SendMessageAsync(mess);
 
-                }
+        //        }
 
-                Thread.Sleep(1000);
-            }
+        //        Thread.Sleep(1000);
+        //    }
 
-        }
+        //}
 
 
 
@@ -626,12 +582,7 @@ namespace IngeBot
             else if (e.Interaction.Data.CustomId == "no_accept_rules")
             {
 
-                DiscordChannel channel = e.Guild.GetDefaultChannel();
-
-                if (Stats.logChannels.ContainsKey(e.Guild.Id))
-                    channel = e.Guild.GetChannel(Stats.logChannels[e.Guild.Id]);
-
-                await channel.SendMessageAsync(e.Interaction.User.Username + " n'a pas accepté les règles...");
+                await MessageHelper.Log(e.Guild, e.Interaction.User.Username + " n'a pas accepté les règles...");
 
                 if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1354869344370163952)))
                     await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1354869344370163952));
@@ -924,6 +875,12 @@ namespace IngeBot
         {
             Console.WriteLine("Socket Error : Restart...");
             Environment.Exit(0);
+        }
+
+        private async Task ZombiedHandler(DiscordClient sender, ZombiedEventArgs args)
+        {
+            Console.WriteLine("Connection Is Too Slow !");
+            Environment.Exit(1);
         }
 
     }

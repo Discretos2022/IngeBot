@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using IngeBot.Services;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -90,11 +91,7 @@ namespace IngeBot.DelayerEngine
 
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AsEphemeral(true));
 
-                DiscordChannel channel = ctx.Guild.GetDefaultChannel();
-                if (Stats.logChannels.ContainsKey(ctx.Guild.Id))
-                    channel = ctx.Guild.GetChannel(Stats.logChannels[ctx.Guild.Id]);
-                await channel.SendMessageAsync(message);
-
+                await MessageHelper.Log(ctx.Guild, new DiscordMessageBuilder().AddEmbed(message));
 
             }
             catch (Exception e)
@@ -121,11 +118,7 @@ namespace IngeBot.DelayerEngine
                 var c = await m.CreateDmChannelAsync();
                 /// await c.SendMessageAsync($"Tu as optenu le rôle {r.Name} sur le serveur {channel.Guild.Name} au moyen d'une commande automatique !");
 
-
-                DiscordChannel log = channel.Guild.GetDefaultChannel();
-                if (Stats.logChannels.ContainsKey(channel.Guild.Id))
-                    log = channel.Guild.GetChannel(Stats.logChannels[channel.Guild.Id]);
-                await log.SendMessageAsync($"Le rôle {r.Mention} a été donné à {m.Mention} automatiquement !");
+                await MessageHelper.Log(channel.Guild, $"Le rôle {r.Mention} a été donné à {m.Mention} automatiquement !");
 
                 if (EndDate != "-")
                 {
@@ -160,11 +153,7 @@ namespace IngeBot.DelayerEngine
                 var c = await m.CreateDmChannelAsync();
                 /// await c.SendMessageAsync($"Tu n'as plus le rôle {r.Name} sur le serveur {channel.Guild.Name} au moyen d'une commande automatique !");
 
-
-                DiscordChannel log = channel.Guild.GetDefaultChannel();
-                if (Stats.logChannels.ContainsKey(channel.Guild.Id))
-                    log = channel.Guild.GetChannel(Stats.logChannels[channel.Guild.Id]);
-                await log.SendMessageAsync($"Le rôle {r.Mention} de {m.Mention} a été enlevé automatiquement !");
+                await MessageHelper.Log(channel.Guild, $"Le rôle {r.Mention} de {m.Mention} a été enlevé automatiquement !");
 
                 ChronoSystem.KillInstruction(Name);
                 File.Delete(GetFolderPath() + Name + ".txt");

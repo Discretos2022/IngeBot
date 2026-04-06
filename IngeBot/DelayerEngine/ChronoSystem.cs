@@ -139,7 +139,7 @@ namespace IngeBot.DelayerEngine
         public static async Task RegisterChronoInstruction(ChronoInstructionBase instruction, DiscordInteraction ctx)
         {
 
-            if (instruction.Name.Contains("/") || instruction.Name.Contains("\\") || instruction.Name.Contains("_"))
+            if (instruction.Name.Contains("/") || instruction.Name.Contains("\\") || instruction.Name.Substring(2).Contains("_"))
             {
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le nom de doit pas contenir de \"/\", \"\\\\\", \"_\" !"));
                 return;

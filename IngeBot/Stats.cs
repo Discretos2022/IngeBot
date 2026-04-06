@@ -11,8 +11,6 @@ namespace IngeBot
     public static class Stats
     {
 
-        public static bool moderationEnabled = false;
-
         public static string botGame = "";
 
         public static string adminRole = "ingénieurs";
@@ -25,12 +23,6 @@ namespace IngeBot
         public static string version = "1.1.5.3";
 
         public static Stopwatch sw = new Stopwatch();
-
-
-        public static Dictionary<ulong, ulong> logChannels = new Dictionary<ulong, ulong>();
-        public static Dictionary<ulong, ulong> welcomeChannels = new Dictionary<ulong, ulong>();
-
-        //public static Dictionary<ulong, int> userMessages = new Dictionary<ulong, int>();
 
 
         public static bool ContainsRole(DiscordMember member, string role)
