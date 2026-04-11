@@ -118,7 +118,7 @@ namespace IngeBot.Services
 
         }
 
-        public static void DeleteDelayedRole(DelayedMessage m)
+        public static void DeleteDelayedMessage(DelayedMessage m)
         {
             if (delayedMessagesList.ContainsKey(m.id))
             {

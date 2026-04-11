@@ -48,10 +48,6 @@ namespace IngeBot.Modules
             };
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Salut ! Je suis IngéBot !  (Pour plus d'informations, voir avec Joshua)").AddEmbed(message));
-            //await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("ID :" + ctx.Channel.Id));
-
-            Console.WriteLine(ctx.Channel.Id);
-            //await ctx.Channel.SendMessageAsync(embed: message);
         }
 
         [SlashCommand("info", "Information concernant le Bot !")]
@@ -631,7 +627,9 @@ namespace IngeBot.Modules
         public async Task Pendu(InteractionContext ctx)
         {
 
-            string[] lines = File.ReadAllLines(Directory.GetCurrentDirectory() + "/Data/Bot/word.txt");
+            string path = Path.GetFullPath(Directory.GetCurrentDirectory() + "/" + Stats.PenduDataDataPath + "word.txt");
+
+            string[] lines = File.ReadAllLines(path);
             int r = Random.Shared.Next(0, lines.Length);
 
             Stats.PenduData data = new Stats.PenduData(lines[r], ctx.Member.Id, ctx.Interaction.ChannelId);
@@ -665,7 +663,9 @@ namespace IngeBot.Modules
 
             string newWord = mot.ToLower();
 
-            string[] existantWords = File.ReadAllLines(Directory.GetCurrentDirectory() + "/Data/Bot/word.txt");
+            string path = Path.GetFullPath(Directory.GetCurrentDirectory() + "/" + Stats.PenduDataDataPath + "word.txt");
+
+            string[] existantWords = File.ReadAllLines(path);
 
             for (int i = 0; i < mot.Length; i++)
             {
@@ -687,7 +687,7 @@ namespace IngeBot.Modules
             }
 
             List<string> words = new List<string> { newWord };
-            File.AppendAllLines(Directory.GetCurrentDirectory() + "/Data/Bot/word.txt", words);
+            File.AppendAllLines(path, words);
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le mot `" + newWord + "` a bien été ajouté !"));
 
@@ -1088,92 +1088,96 @@ namespace IngeBot.Modules
         }
 
 
-        [SlashCommand("anniversaire-set", "Ajouter ton anniversaire !")]
+
+        [SlashRequireGuild]
+        [SlashCommand("birthday-set", "Ajouter ton anniversaire !")]
         public async Task SetBirthday(InteractionContext ctx, [Option("Date", "Format : 2025/01/01")] string date)
         {
 
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
-            if (!DateTime.TryParseExact(date, "yyyy/MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            if (!DateTime.TryParseExact(date, "yyyy/MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime formattedDate))
             {
                 await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date doit avoir ce format : `yyyy/MM/dd`"));
                 return;
             }
 
-            string baseDate = date;
+            DateTime d = new DateTime(
+                DateTime.Now.Year,
+                formattedDate.Month,
+                formattedDate.Day,
+                9,
+                0,
+                0
+            );
 
-            date += " 09:00";
-
-            date = date.Substring(4);
-
-            TimeSpan time = ChronoSystem.GetTimeSpan(DateTime.Now.Year + date);
-            if (time.Ticks <= 0)
-                date = DateTime.Now.Year + 1 + date;
-            else
-                date = DateTime.Now.Year + date;
-
-            string name = ctx.Interaction.User.Id.ToString();
-            string text = "# Joyeux anniversaire " + ctx.Interaction.User.Mention;
+            int diff = DateTime.Now.CompareTo(d);
+            if (diff > 0) d = d.AddYears(1);
 
 
             Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.WELCOME_CHANNEL);
-
             DiscordChannel channel = ctx.Interaction.Guild.GetChannel(ulong.Parse(param?.value ?? "0")) ?? ctx.Interaction.Guild.GetDefaultChannel();
 
-            MessageBirthday mb = new MessageBirthday(name, text, date, baseDate, ctx.Guild.Id.ToString(), channel.Id.ToString());
 
-            await ChronoSystem.RegisterChronoInstruction(mb, ctx.Interaction);
+            DelayedMessage? m = DelayedMessage.FindByNameAndGuild($"ingebot_birthday_{ctx.Interaction.User.Id}", (long)ctx.Guild.Id);
+
+            if (m == null)
+                m = new DelayedMessage((long)ctx.Guild.Id, (long)channel.Id, (long)ctx.Client.CurrentUser.Id, $"ingebot_birthday_{ctx.Interaction.User.Id}", ctx.Interaction.User.Id.ToString() + "_" + formattedDate.Year, d, true);
+            else
+                m.date = d;
+
+            m.Save();
+
+            MessageDelayerService.UpdateDelayedMessage(m, ctx.Client);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Ton anniversaire a été défini : {formattedDate.ToString("yyyy/MM/dd")}").AsEphemeral(true));
 
         }
 
-        [SlashCommand("anniversaire-del", "Supprimer ton anniversaire !")]
+        [SlashRequireGuild]
+        [SlashCommand("birthday-del", "Supprimer ton anniversaire !")]
         public async Task DeleteBirthday(InteractionContext ctx)
         {
 
-            if (ctx.Guild == null)
+            string name = $"ingebot_birthday_{ctx.Interaction.User.Id}";
+
+            DelayedMessage? m = DelayedMessage.FindByNameAndGuild(name, (long)ctx.Guild.Id);
+
+            if (m == null)
             {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Ton anniversaire n'est pas défini !").AsEphemeral(true));
                 return;
             }
 
-            string name = (int)ChronoSystem.InstructionType.MessageBirthday + "_" + ctx.Interaction.User.Id.ToString();
+            m.Delete();
 
-            await ChronoSystem.UnregisterChronoInstruction(name, ctx.Interaction);
+            MessageDelayerService.DeleteDelayedMessage(m);
 
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Ton anniversaire a été supprimer !").AsEphemeral(true));
         }
 
-        [SlashCommand("anniversaire", "Donne la date à laquelle tu as défini ton anniversaire !")]
+        [SlashRequireGuild]
+        [SlashCommand("birthday", "Donne la date à laquelle tu as défini ton anniversaire !")]
         public async Task GetBirthday(InteractionContext ctx)
         {
 
-            if (ctx.Guild == null)
+            string name = $"ingebot_birthday_{ctx.Interaction.User.Id}";
+
+            DelayedMessage? m = DelayedMessage.FindByNameAndGuild(name, (long)ctx.Guild.Id);
+
+            if (m == null)
             {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Ton anniversaire n'est pas défini !\nTu peux le définir à l'aide de la commande `/birthday-set` !").AsEphemeral(true));
                 return;
             }
 
-            string name = (int)ChronoSystem.InstructionType.MessageBirthday + "_" + ctx.Interaction.User.Id.ToString();
+            DateTime birthday = new DateTime(
+                int.Parse(m.text.Split("_")[1]),
+                m.date.Month,
+                m.date.Day
+            );
 
-            if (ChronoSystem.instructions.TryGetValue(name, out var instruction))
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Ton anniversaire est défini le : `{((MessageBirthday)instruction).BaseDate}`"));
-            else
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'as pas défini ton anniversaire. Tu peux le définir avec `/anniversaire-set`"));
-
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Ton anniversaire est défini le : {birthday.ToString("yyyy/MM/dd")} !").AsEphemeral(true));
 
         }
-
-
-
 
 
         [SlashRequireGuild]
@@ -1203,7 +1207,7 @@ namespace IngeBot.Modules
         public async Task InfoDelayedMessage(InteractionContext ctx, [Option("Nom", "Nom du message à afficher.")] string name)
         {
 
-            DelayedMessage? ms = DelayedMessage.FindByName(name);
+            DelayedMessage? ms = DelayedMessage.FindByNameAndGuild(name, (long)ctx.Guild.Id);
 
             if (ms == null)
             {
@@ -1244,14 +1248,14 @@ namespace IngeBot.Modules
         public async Task DeleteDelayedMessage(InteractionContext ctx)
         {
 
-
             DelayedMessage[] ms = DelayedMessage.FindByGuild((long)ctx.Guild.Id);
 
             List<DiscordSelectComponentOption> options = new List<DiscordSelectComponentOption>();
 
             for (int i = 0; i < ms.Length; i++)
             {
-                options.Add(new DiscordSelectComponentOption(ms[i].name, ms[i].name));
+                if (!ms[i].name.StartsWith("ingebot_"))
+                    options.Add(new DiscordSelectComponentOption(ms[i].name, ms[i].name));
             }
 
             if (options.Count == 0)
@@ -1284,18 +1288,21 @@ namespace IngeBot.Modules
 
             DelayedMessage[] ms = DelayedMessage.FindByGuild((long)ctx.Guild.Id);
 
-            string desc = "";
-
-            if (ms.Length == 0) desc = "Il n'y a pas de rôle temporaire programmé pour le moment...";
+            string desc = "```\n";
 
             for (int i = 0; i < ms.Length; i++)
             {
-                desc += $"```{ms[i].name}```\n";
+                if (!ms[i].name.StartsWith("ingebot_"))
+                    desc += $"{ms[i].name}\n";
             }
+            desc += "```";
+
+            if (desc == "```\n```")
+                desc = "Il n'y a pas de message programmé pour le moment...";
 
             var message = new DiscordEmbedBuilder
             {
-                Title = "List des messages temporaires :",
+                Title = "List des messages programmés :",
                 Color = DiscordColor.Gray,
                 Description = desc,
                 Footer = new DiscordEmbedBuilder.EmbedFooter
@@ -1313,7 +1320,7 @@ namespace IngeBot.Modules
         [SlashRequireGuild]
         [SlashRequireAdmin]
         [SlashCommand("setrole-2-0", "Permet de donner un rôle temporaire à un membre du serveur ! (admin)")]
-        public async Task SetRole(InteractionContext ctx, [Option("Nom", "Permet, après, de le supprimer à partir de son nom.")] string name, [Option("Utilisateur", "L'utilisateur")] DiscordUser user, [Option("Rôle", "Le rôle")] DiscordRole role, [Option("Début", "Format : 2025/01/01 ou -")] string start, [Option("Fin", "Format : 2025/01/01 ou -")] string end)
+        public async Task SetRole(InteractionContext ctx, [Option("Nom", "Permet, après, de le supprimer à partir de son nom.")] string name, [Option("Utilisateur", "L'utilisateur")] DiscordUser user, [Option("Rôle", "Le rôle")] DiscordRole role, [Option("Début", "Format : 2025/01/01 10:00 ou -")] string start, [Option("Fin", "Format : 2025/01/01 10:00 ou -")] string end)
         {
 
             if (!DateTime.TryParseExact(start, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDateStart) && start != "-")
@@ -1335,7 +1342,7 @@ namespace IngeBot.Modules
                 parsedDateEnd = DateTime.MinValue;
 
 
-            DelayedRole? r = DelayedRole.FindByName(name);
+            DelayedRole? r = DelayedRole.FindByNameAndGuild(name, (long)ctx.Guild.Id);
 
             string title = "Détails du rôle temporaire :";
             if (r == null)
@@ -1395,14 +1402,15 @@ namespace IngeBot.Modules
 
             DelayedRole[] rs = DelayedRole.FindByGuild((long)ctx.Guild.Id);
 
-            string desc = "";
-
-            if (rs.Length == 0) desc = "Il n'y a pas de rôle temporaire programmé pour le moment...";
+            string desc = "```\n";
 
             for (int i = 0; i < rs.Length; i++)
             {
-                desc += $"```{rs[i].name}```\n";
+                desc += $"{rs[i].name}\n";
             }
+            desc += "```";
+
+            if (rs.Length == 0) desc = "Il n'y a pas de rôle temporaire programmé pour le moment...";
 
             var message = new DiscordEmbedBuilder
             {
@@ -1426,7 +1434,7 @@ namespace IngeBot.Modules
         public async Task DeleteDelayedRole(InteractionContext ctx, [Option("Nom", "Nom du role temporaire")] string name)
         {
 
-            DelayedRole? r = DelayedRole.FindByName(name);
+            DelayedRole? r = DelayedRole.FindByNameAndGuild(name, (long)ctx.Guild.Id);
 
             if (r == null)
             {
@@ -1451,7 +1459,7 @@ namespace IngeBot.Modules
         public async Task InfoDelayedRole(InteractionContext ctx, [Option("Nom", "Nom du role temporaire")] string name)
         {
 
-            DelayedRole? r = DelayedRole.FindByName(name);
+            DelayedRole? r = DelayedRole.FindByNameAndGuild(name, (long)ctx.Guild.Id);
 
             if (r == null)
             {

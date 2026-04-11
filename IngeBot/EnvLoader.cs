@@ -31,7 +31,10 @@ namespace IngeBot
         public static Configuration LoadEnv()
         {
 
-            string configPath = "../config/ingebot.config";
+            /// /bin/<dist>/ingebot
+            /// /config/ingebot.config
+            /// /data/
+            string configPath = "../../config/ingebot.config";
 
             if (!File.Exists(configPath))
             {

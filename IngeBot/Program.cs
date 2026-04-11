@@ -46,6 +46,8 @@ namespace IngeBot
 
             DatabaseSystem.Init(config.DataBaseHost, config.DataBasePort, config.DataBaseUsername, config.DataBasePassword, config.DataBaseName);
 
+            Stats.PenduDataDataPath = config.DataPath;
+
 
             //DelayedMessage? m = DelayedMessage.FindById(3);
             //m?.Delete();
@@ -385,57 +387,6 @@ namespace IngeBot
         }
 
 
-        //private void UpdateStatusLoop()
-        //{
-
-        //    while (true)
-        //    {
-
-        //        // Bonne année !
-        //        if (DateTime.Now.Day == 01 && DateTime.Now.Month == 01 && DateTime.Now.Hour == 00 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
-        //        {
-
-        //            DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
-
-        //            if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
-        //                channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
-
-        //            /*var mess = new DiscordEmbedBuilder
-        //            {
-        //                Color = DiscordColor.Red,
-        //                Title = "ℬ𝒪𝒩𝒩ℰ 𝒜𝒩𝒩ℰℰ 𝟚𝟘𝟚𝟝 !",
-        //            };*/
-
-        //            channel.SendMessageAsync("Bonne année 𝟚𝟘𝟚𝟝 !");
-
-        //        }
-
-        //        // Joyeux Noel !
-        //        if (DateTime.Now.Day == 25 && DateTime.Now.Month == 12 && DateTime.Now.Hour == 09 && DateTime.Now.Minute == 00 && DateTime.Now.Second == 00) //DateTime.Now == new DateTime(2024, 12, 25, 12, 0, 0)
-        //        {
-
-        //            DiscordChannel channel = client.Guilds[1156894161761476648].GetDefaultChannel();
-
-        //            if (Stats.welcomeChannels.ContainsKey(client.Guilds[1156894161761476648].Id))
-        //                channel = client.Guilds[1156894161761476648].GetChannel(Stats.welcomeChannels[client.Guilds[1156894161761476648].Id]);
-
-        //            var mess = new DiscordEmbedBuilder
-        //            {
-        //                Color = DiscordColor.Red,
-        //                Title = "𝒥𝑜𝓎𝑒𝓊𝓍 𝒩𝑜𝑒𝓁 *!*",
-        //            };
-
-        //            channel.SendMessageAsync(mess);
-
-        //        }
-
-        //        Thread.Sleep(1000);
-        //    }
-
-        //}
-
-
-
         private static async Task PressedButton(DiscordClient sender, ComponentInteractionCreateEventArgs e)
         {
 
@@ -698,7 +649,7 @@ namespace IngeBot
 
                 string name = e.Interaction.Data.Values[0];
 
-                DelayedMessage? dm = DelayedMessage.FindByName(name);
+                DelayedMessage? dm = DelayedMessage.FindByNameAndGuild(name, (long)e.Guild.Id);
 
                 if (dm == null)
                 {
@@ -707,7 +658,7 @@ namespace IngeBot
                 }
 
                 dm.Delete();
-                MessageDelayerService.DeleteDelayedRole(dm);
+                MessageDelayerService.DeleteDelayedMessage(dm);
 
                 DiscordUser? user = await e.Interaction.Guild.GetMemberAsync((ulong)dm.ownerId);
                 string username = user?.Mention ?? "Inconnu";
@@ -809,6 +760,13 @@ namespace IngeBot
                 string date = e.Values.Values.ElementAt(2);
 
 
+                if (name.StartsWith("ingebot_"))
+                {
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Les noms commençant par `ingebot_` sont réservés au système d'IngéBot !"));
+                    return;
+                }
+
+
                 var message = new DiscordEmbedBuilder
                 {
                     Title = "Résumé du nouveau message programmé :",
@@ -829,7 +787,7 @@ namespace IngeBot
                 }
 
 
-                DelayedMessage? m = DelayedMessage.FindByName(name);
+                DelayedMessage? m = DelayedMessage.FindByNameAndGuild(name, (long)e.Interaction.Guild.Id);
 
                 if (m == null)
                 {

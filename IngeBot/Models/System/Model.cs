@@ -127,8 +127,6 @@ namespace IngeBot.Models.System
 
             string where = string.Join(" ", args);
 
-            Console.WriteLine(where);
-
             NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE {where};");
             if (reader == null) return Array.Empty<T>();
 

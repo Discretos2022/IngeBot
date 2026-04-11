@@ -118,5 +118,10 @@ namespace IngeBot.Models
             return FindOneWhere("name", "=", $"\'{name}\'");
         }
 
+        public static DelayedRole? FindByNameAndGuild(string name, long guildId)
+        {
+            return FindOneWhere("name", "=", $"\'{name}\'", "AND", "guild_id", "=", $"{guildId}");
+        }
+
     }
 }

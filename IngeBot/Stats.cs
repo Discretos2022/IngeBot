@@ -92,6 +92,7 @@ namespace IngeBot
 
         public static List<string> words = new List<string>();
 
+        public static string PenduDataDataPath = "";
         public static Dictionary<string, PenduData> penduDict = new Dictionary<string, PenduData>();
 
         public static string GetPenduKey(ulong user, ulong channel)
