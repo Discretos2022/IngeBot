@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using IngeBot.Models.System;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -50,7 +51,7 @@ namespace IngeBot.Models
 
         public static Parameter? FindByGuildIdAndKey(ulong guildId, string key)
         {
-            return FindWhere("guild_id", "=", guildId, "AND", "key", "=", $"\'{key}\'");
+            return FindOneWhere("guild_id", "=", guildId, "AND", "key", "=", $"\'{key}\'");
         }
 
     }

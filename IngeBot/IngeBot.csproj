@@ -17,8 +17,4 @@
     <PackageReference Include="Npgsql" Version="8.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Modules\" />
-  </ItemGroup>
-
 </Project>

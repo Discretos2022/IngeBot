@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IngeBot.Models
+namespace IngeBot.Models.System
 {
     public abstract class Model<T> where T : Model<T>
     {
@@ -66,6 +66,19 @@ namespace IngeBot.Models
 
         }
 
+        public bool Delete()
+        {
+            if (id == -1) return false;
+
+            id = DatabaseSystem.ExecuteDelete(
+                $"DELETE FROM {GetTableName()} WHERE id = @id RETURNING id",
+                id
+            );
+
+            return id != -1;
+
+        }
+
         public static T? FindById(int id)
         {
             T? instance = (T?)Activator.CreateInstance(typeof(T), nonPublic: true);
@@ -84,14 +97,12 @@ namespace IngeBot.Models
             return instance;
         }
 
-        public static T? FindWhere(params object[] args)
+        public static T? FindOneWhere(params object[] args)
         {
             T? instance = (T?)Activator.CreateInstance(typeof(T), nonPublic: true);
             if (instance == null) return default;
 
             string where = string.Join(" ", args);
-
-            Console.WriteLine(where);
 
             NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE {where};");
             if (reader == null || !reader.Read()) return default;
@@ -104,6 +115,37 @@ namespace IngeBot.Models
             }
 
             return instance;
+        }
+
+
+        public static T[] FindWhere(params object[] args)
+        {
+            T? instance = (T?)Activator.CreateInstance(typeof(T), nonPublic: true);
+            if (instance == null) return Array.Empty<T>();
+
+            List<T> result = new List<T>();
+
+            string where = string.Join(" ", args);
+
+            Console.WriteLine(where);
+
+            NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE {where};");
+            if (reader == null) return Array.Empty<T>();
+
+
+            while (reader.Read())
+            {
+                T? instanceNew = (T?)Activator.CreateInstance(typeof(T), nonPublic: true);
+                if (instanceNew == null) continue;
+                foreach (var prop in typeof(T).GetFields())
+                {
+                    ColumnAttribut? col = prop.GetCustomAttribute<ColumnAttribut>();
+                    if (col != null) prop.SetValue(instanceNew, reader[col.Name]);
+                }
+                result.Add(instanceNew);
+            }
+
+            return result.ToArray();
         }
 
     }

@@ -44,5 +44,18 @@ namespace IngeBot
             return (int)result;
         }
 
+        public static int ExecuteDelete(string request, int id)
+        {
+            NpgsqlConnection connection = GetConnection();
+            NpgsqlCommand cmd = new NpgsqlCommand(request, connection);
+
+            cmd.Parameters.AddWithValue("@id", id);
+
+            var result = cmd.ExecuteScalar();
+
+            if (result == null) return -1;
+            return (int)result;
+        }
+
     }
 }

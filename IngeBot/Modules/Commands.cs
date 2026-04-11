@@ -3,16 +3,18 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using DSharpPlus.VoiceNext;
 using IngeBot;
 using IngeBot.DelayerEngine;
 using IngeBot.Models;
+using IngeBot.Models.System;
 using IngeBot.Services;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 
-namespace Bot.Modules
+namespace IngeBot.Modules
 {
     public class Commands : BaseCommandModule
     {
@@ -87,16 +89,10 @@ namespace Bot.Modules
 
         }
 
-
+        [SlashRequireDisc]
         [SlashCommand("ip", "L'adresse IP du server qui héberge le bot. (𝕯𝖎𝖘𝖈𝖗𝖊𝖙𝖔𝖘)")]
         public async Task GetIPAsync(InteractionContext ctx)
         {
-
-            if (ctx.User.Username != "discretos")
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche en cours..."));
 
@@ -115,8 +111,8 @@ namespace Bot.Modules
         {
             try
             {
-                String direction = "";
-                HttpWebRequest request = HttpWebRequest.CreateHttp("http://checkip.dyndns.org/");
+                string direction = "";
+                HttpWebRequest request = WebRequest.CreateHttp("http://checkip.dyndns.org/");
                 using (WebResponse response = request.GetResponse())
                 {
                     using (StreamReader stream = new StreamReader(response.GetResponseStream()))
@@ -136,22 +132,11 @@ namespace Bot.Modules
             }
         }
 
-
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("moderation", "Fonction de modération (true/false)")]
         public async Task EnableModerationAsync(InteractionContext ctx, [Option("activer", "true or false")] string response)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
 
             if (response == "true" || response == "false")
             {
@@ -174,6 +159,8 @@ namespace Bot.Modules
         }
 
 
+        [SlashRequireGuild]
+        [SlashRequireDisc]
         [SlashCommand("setbotgame", "Une commande pour le jeu auquel le bot joue. (admin)")]
         public async Task SetBotGame(InteractionContext ctx)
         {
@@ -195,27 +182,15 @@ namespace Bot.Modules
 
         }
 
-
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("grant", "Une commande pour ajouter un rôle ! (admin)")]
         public async Task GrantRole(InteractionContext ctx)
         {
 
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
             for (int i = 0; i < ctx.Guild.Roles.Count; i++)
             {
                 Console.WriteLine(ctx.Guild.Roles.ElementAt(i).Value);
-            }
-
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
             }
 
             Stats.role = "";
@@ -231,26 +206,16 @@ namespace Bot.Modules
 
         }
 
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("revoke", "Une commande pour enlever un rôle ! (admin)")]
         public async Task RevokeRole(InteractionContext ctx)
         {
 
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
             for (int i = 0; i < ctx.Guild.Roles.Count; i++)
             {
                 Console.WriteLine(ctx.Guild.Roles.ElementAt(i).Value);
-            }
-
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
             }
 
             Stats.role = "";
@@ -266,21 +231,11 @@ namespace Bot.Modules
         }
 
 
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("setchannellog", "Une commande pour définir un salon comme log ! (admin)")]
         public async Task SetChannelLog(InteractionContext ctx)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
 
             Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.LOG_CHANNEL);
             if (param == null) param = new Parameter((long)ctx.Guild.Id, Parameter.LOG_CHANNEL, "");
@@ -295,21 +250,12 @@ namespace Bot.Modules
 
         }
 
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("setwelcomechannel", "Une commande pour définir un salon comme salon de bienvenu ! (admin)")]
         public async Task SetWelcomeChannel(InteractionContext ctx)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
 
             Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.WELCOME_CHANNEL);
             if (param == null) param = new Parameter((long)ctx.Guild.Id, Parameter.WELCOME_CHANNEL, "");
@@ -420,7 +366,7 @@ namespace Bot.Modules
 
                 if (grid[x, y] == 0)
                 {
-                    grid[x, y] = (-grid[x, y]) - 1;
+                    grid[x, y] = -grid[x, y] - 1;
                     isSet = true;
                 }
 
@@ -509,28 +455,11 @@ namespace Bot.Modules
         }
 
 
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("config", "Une commande pour afficher les données sauvegardées. (admin)")]
         public async Task GetSaveInfo(InteractionContext ctx)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
-
-            if (ctx.User.Username != "discretos")
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données... (attention, tu n'es pas Discretos, tu n'as pas accès à la base de données)"));
-            else
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données..."));
-
 
             Parameter? logChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.LOG_CHANNEL);
             string logChannel = logChannelParam?.value ?? "";
@@ -542,7 +471,7 @@ namespace Bot.Modules
 
             Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.MODERATION);
             string moderationParam = param?.value ?? "false";
-            bool moderation = bool.Parse((moderationParam == "true" || moderationParam == "false") ? moderationParam : "false");
+            bool moderation = bool.Parse(moderationParam == "true" || moderationParam == "false" ? moderationParam : "false");
 
             var m = new DiscordEmbedBuilder
             {
@@ -663,6 +592,7 @@ namespace Bot.Modules
         }
 
 
+        [SlashRequireGuild]
         [SlashCommand("ticket", "Une commande pour créer un ticket !")]
         public async Task CreateTicket(InteractionContext ctx, [Option("Nom", "Message du ticket")] string name)
         {
@@ -696,15 +626,10 @@ namespace Bot.Modules
         }
 
 
+        [SlashRequireGuild]
         [SlashCommand("pendu", "Créer un pendu !")]
         public async Task Pendu(InteractionContext ctx)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
 
             string[] lines = File.ReadAllLines(Directory.GetCurrentDirectory() + "/Data/Bot/word.txt");
             int r = Random.Shared.Next(0, lines.Length);
@@ -769,15 +694,11 @@ namespace Bot.Modules
         }
 
 
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("event", "Créer le message d'évenement ! (admin)")]
         public async Task EventMess(InteractionContext ctx)
         {
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
 
             var title = new TextInputComponent("Titre : ", "event_title", "Le titre de l'évenement", required: true, style: TextInputStyle.Short);
             var info = new TextInputComponent("Info : ", "event_info", "Description...", required: true, style: TextInputStyle.Paragraph);
@@ -844,23 +765,11 @@ namespace Bot.Modules
         }
 
 
-
+        /**[SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("update", "Une commande pour mettre le bot à jour ! (admin)")]
         public async Task Update(InteractionContext ctx)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Mise à jour ..."));
 
@@ -895,7 +804,7 @@ namespace Bot.Modules
 
             Environment.Exit(0);
 
-        }
+        }**/
 
 
         /*[SlashCommand("level", "Une commande ! (admin)")]
@@ -950,23 +859,11 @@ namespace Bot.Modules
         }*/
 
 
-
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("roles", "(admin)")]
         public async Task Role(InteractionContext ctx)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
 
             string message = "```";
 
@@ -1115,25 +1012,14 @@ namespace Bot.Modules
 
 
 
-
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("welcome", "Une commande totalement stateless pour dire BIENVENU 4.0 ! (admin)")]
         public async Task Welcome4(InteractionContext ctx, [Option("Builder", "Constructeur pour les boutons")] string builder)
         {
 
             try
             {
-
-                if (ctx.Guild == null)
-                {
-                    await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                    return;
-                }
-
-                if (!Stats.ContainsRole(ctx.Member, Stats.adminRole)) // ctx.User.Username != "discretos" && 
-                {
-                    await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                    return;
-                }
 
                 var message = new DiscordEmbedBuilder
                 {
@@ -1202,140 +1088,6 @@ namespace Bot.Modules
         }
 
 
-        [SlashCommand("message-time", "Créer un message programmé ! (admin)")]
-        public async Task MessageTime(InteractionContext ctx)
-        {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
-            var name = new TextInputComponent("Nom du message", "message_name", "Ne doit pas déjà être utilisé sur un autre message !", required: true, style: TextInputStyle.Short);
-            var text = new TextInputComponent("Message : ", "message", "Le message...", required: true, style: TextInputStyle.Paragraph);
-            var date = new TextInputComponent("Date et heure de l'envoi : ", "message_time", "Format : 2025/01/01 12:45", required: true, style: TextInputStyle.Short);
-
-            var modal = new DiscordInteractionResponseBuilder()
-                .WithTitle("Nouveau message programmé")
-                .WithCustomId("message-time-generator")
-                .AddComponents(name)
-                .AddComponents(text)
-                .AddComponents(date);
-
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
-
-        }
-
-        [SlashCommand("message-time-list", "Retourne la liste des messages programmés ! (admin)")]
-        public async Task MessageTimeList(InteractionContext ctx)
-        {
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
-
-            var msg = new DiscordEmbedBuilder
-            {
-                Title = "Les messages programmés :",
-                Color = DiscordColor.Azure,
-                Footer = new DiscordEmbedBuilder.EmbedFooter
-                {
-                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
-                    Text = "Message Time System 1.0",
-                },
-            };
-
-            List<ChronoInstructionBase> messages = ChronoSystem.instructions.Where((e) => e.Value.GuildId == ctx.Guild.Id.ToString() && e.Value.InstructionType == ChronoSystem.InstructionType.MessageTime).Select(e => e.Value).ToList();
-
-            for (int i = 0; i < messages.Count; i++)
-            {
-                msg.Description += "`" + messages[i].Name.Substring(2) + "`" + " - " + "`" + messages[i].Date + "`" + "\n";
-            }
-
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg));
-
-        }
-
-
-        [SlashCommand("message-time-get", "Retourne le message programmé avec ce nom ! (admin)")]
-        public async Task MessageTimeGet(InteractionContext ctx, [Option("Nom", "Nom du message")] string name)
-        {
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
-            if (!ChronoSystem.instructions.TryGetValue((int)ChronoSystem.InstructionType.MessageTime + "_" + name, out var message))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($":warning: Le message `{name}` n'existe pas ! Afficher la liste des messages programmés avec `/message-time-list`."));
-                return;
-            }
-
-
-            var msg = new DiscordEmbedBuilder
-            {
-                Title = $"Résumé du message programmé `{name}` :",
-                Color = DiscordColor.Gray,
-                Description = ((MessageTime)message).Text + "\n Le message sera envoyé le : \n `" + message.Date + "`",
-                Footer = new DiscordEmbedBuilder.EmbedFooter
-                {
-                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
-                    Text = "Message Time System 1.0",
-                },
-            };
-
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg));
-        }
-
-
-        [SlashCommand("message-time-del", "Supprimer un message programmé ! (admin)")]
-        public async Task MessageTimeDelete(InteractionContext ctx)
-        {
-
-            List<ChronoInstructionBase> ms = ChronoSystem.instructions.Where((e) => e.Value.GuildId == ctx.Guild.Id.ToString() && e.Value.InstructionType == ChronoSystem.InstructionType.MessageTime).Select(e => e.Value).ToList();
-
-            List<DiscordSelectComponentOption> options = new List<DiscordSelectComponentOption>();
-
-            for (int i = 0; i < ms.Count; i++)
-            {
-                options.Add(new DiscordSelectComponentOption(ms[i].Name.Substring(2), ms[i].Name));
-            }
-
-            if (options.Count == 0)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Il n'y a pas de message programmé !"));
-                return;
-            }
-
-            var msg = new DiscordEmbedBuilder
-            {
-                Title = $"Veux-tu supprimer un message ?",
-                Color = DiscordColor.Orange,
-                Description = "Quel message veux-tu supprimer ?",
-                Footer = new DiscordEmbedBuilder.EmbedFooter
-                {
-                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
-                    Text = "Message Time System 1.0",
-                },
-            };
-
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg).AddComponents(new DiscordSelectComponent("msg_time_del", "Message", options)));
-
-        }
-
-
         [SlashCommand("anniversaire-set", "Ajouter ton anniversaire !")]
         public async Task SetBirthday(InteractionContext ctx, [Option("Date", "Format : 2025/01/01")] string date)
         {
@@ -1366,7 +1118,7 @@ namespace Bot.Modules
 
             TimeSpan time = ChronoSystem.GetTimeSpan(DateTime.Now.Year + date);
             if (time.Ticks <= 0)
-                date = (DateTime.Now.Year + 1) + date;
+                date = DateTime.Now.Year + 1 + date;
             else
                 date = DateTime.Now.Year + date;
 
@@ -1421,61 +1173,319 @@ namespace Bot.Modules
         }
 
 
+
+
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
+        [SlashCommand("delayed-message-create", "Créer un message programmé ! (admin)")]
+        public async Task CreateDelayedMessage(InteractionContext ctx)
+        {
+
+            var name = new TextInputComponent("Nom du message", "message_name", "Utiliser un nom déjà existant le mettra juste à jour !", required: true, style: TextInputStyle.Short);
+            var text = new TextInputComponent("Message : ", "message", "Le message...", required: true, style: TextInputStyle.Paragraph);
+            var date = new TextInputComponent("Date et heure de l'envoi : ", "message_time", "Format : 2025/01/01 12:45", required: true, style: TextInputStyle.Short);
+
+            var modal = new DiscordInteractionResponseBuilder()
+                .WithTitle("Nouveau message programmé")
+                .WithCustomId("delayed-message-modal")
+                .AddComponents(name)
+                .AddComponents(text)
+                .AddComponents(date);
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
+
+        }
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
+        [SlashCommand("delayed-message-info", "Affiche les infos d'un message programmé ! (admin)")]
+        public async Task InfoDelayedMessage(InteractionContext ctx, [Option("Nom", "Nom du message à afficher.")] string name)
+        {
+
+            DelayedMessage? ms = DelayedMessage.FindByName(name);
+
+            if (ms == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le message ```{name}``` n'existe pas !"));
+                return;
+            }
+
+            DiscordUser? user = await ctx.Interaction.Guild.GetMemberAsync((ulong)ms.ownerId);
+            string username = user?.Mention ?? "Inconnu";
+
+            DiscordChannel? channel = ctx.Interaction.Guild.GetChannel((ulong)ms.channelId);
+            string channelName = channel?.Mention ?? "Inconnu";
+
+            var msg = new DiscordEmbedBuilder
+            {
+                Title = "Détails du message programmé :",
+                Color = DiscordColor.Gray,
+                Description = $"Nom : {ms.name}" +
+                                  $"\nCréateur : {username}" +
+                                  $"\nDate d'envoi : {ms.date.ToString("yyyy/MM/dd HH:mm")}" +
+                                  $"\nSalon d'envoi : {channelName}" +
+                                  $"\nTexte : {ms.text}",
+
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Message Delayer System 2.0",
+                },
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg));
+
+        }
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
+        [SlashCommand("delayed-message-delete", "Supprimer un message programmé ! (admin)")]
+        public async Task DeleteDelayedMessage(InteractionContext ctx)
+        {
+
+
+            DelayedMessage[] ms = DelayedMessage.FindByGuild((long)ctx.Guild.Id);
+
+            List<DiscordSelectComponentOption> options = new List<DiscordSelectComponentOption>();
+
+            for (int i = 0; i < ms.Length; i++)
+            {
+                options.Add(new DiscordSelectComponentOption(ms[i].name, ms[i].name));
+            }
+
+            if (options.Count == 0)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Il n'y a pas de message programmé !"));
+                return;
+            }
+
+            var msg = new DiscordEmbedBuilder
+            {
+                Title = $"Veux-tu supprimer un message ?",
+                Color = DiscordColor.Orange,
+                Description = "Quel message veux-tu supprimer ?",
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Delayed Message System 2.0",
+                },
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(msg).AddComponents(new DiscordSelectComponent("delayed_message_delete", "Message", options)));
+
+        }
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
+        [SlashCommand("delayed-message-list", "Permet d'afficher la liste des messages programmés ! (admin)")]
+        public async Task ListDelayedMessage(InteractionContext ctx)
+        {
+
+            DelayedMessage[] ms = DelayedMessage.FindByGuild((long)ctx.Guild.Id);
+
+            string desc = "";
+
+            if (ms.Length == 0) desc = "Il n'y a pas de rôle temporaire programmé pour le moment...";
+
+            for (int i = 0; i < ms.Length; i++)
+            {
+                desc += $"```{ms[i].name}```\n";
+            }
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "List des messages temporaires :",
+                Color = DiscordColor.Gray,
+                Description = desc,
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Message Delayer System 2.0",
+                },
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
+
+        }
+
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
         [SlashCommand("setrole-2-0", "Permet de donner un rôle temporaire à un membre du serveur ! (admin)")]
         public async Task SetRole(InteractionContext ctx, [Option("Nom", "Permet, après, de le supprimer à partir de son nom.")] string name, [Option("Utilisateur", "L'utilisateur")] DiscordUser user, [Option("Rôle", "Le rôle")] DiscordRole role, [Option("Début", "Format : 2025/01/01 ou -")] string start, [Option("Fin", "Format : 2025/01/01 ou -")] string end)
         {
 
-            if (ctx.Guild == null)
+            if (!DateTime.TryParseExact(start, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDateStart) && start != "-")
             {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date de début doit avoir ce format : `yyyy/MM/dd HH:mm`"));
                 return;
             }
 
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
+            if (!DateTime.TryParseExact(end, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDateEnd) && end != "-")
             {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date de début doit avoir ce format : `yyyy/MM/dd HH:mm`"));
                 return;
             }
 
-            string instrName = (int)ChronoSystem.InstructionType.RoleTime + "_" + name;
+            if (start == "-")
+                parsedDateStart = DateTime.Now.AddSeconds(1);
+
+            if (end == "-")
+                parsedDateEnd = DateTime.MinValue;
 
 
+            DelayedRole? r = DelayedRole.FindByName(name);
+
+            string title = "Détails du rôle temporaire :";
+            if (r == null)
+            {
+                r = new DelayedRole(
+                    (long)ctx.Guild.Id, 
+                    (long)ctx.User.Id, 
+                    (long)user.Id, 
+                    (long)role.Id, 
+                    name, 
+                    parsedDateStart, 
+                    parsedDateEnd
+                );
+            }
+            else
+                title = "Rôle temporaire mis à jour :";
+
+
+            DiscordUser? discordUser = await ctx.Interaction.Guild.GetMemberAsync((ulong)r.targetId);
+            string username = discordUser?.Mention ?? "Inconnu";
+
+            DiscordRole? discordRole = ctx.Interaction.Guild.GetRole((ulong)r.roleId);
+            string rolename = discordRole?.Mention ?? "Inconnu";
 
             var message = new DiscordEmbedBuilder
             {
-                Title = "Résumé du rôle temporaire :",
+                Title = title,
                 Color = DiscordColor.Gray,
-                Description = $"{user.Mention}\n{role.Mention}\n{start}\n{end}",
+                Description = $"Utilisateur cible : {username}" +
+                                $"\nRôle : {rolename}" +
+                                $"\nDate de début : {r.date_start.ToString("yyyy/MM/dd HH:mm")}" +
+                                $"\nDate de fin : {r.date_end.ToString("yyyy/MM/dd HH:mm")}",
+
                 Footer = new DiscordEmbedBuilder.EmbedFooter
                 {
-                    IconUrl = ctx.User.AvatarUrl,
-                    Text = "Chrono Time System 1.0",
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Role Delayer System 2.0",
                 },
             };
 
 
-            if (!DateTime.TryParseExact(start, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _) && start != "-")
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date de début doit avoir ce format : `yyyy/MM/dd HH:mm`"));
-                return;
-            }
+            if (r.Save())
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AsEphemeral(true));
+            else
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Une erreur est survenu lors de la sauvegarde du rôle temporaire...").AddEmbed(message).AsEphemeral(true));
 
-            if (!DateTime.TryParseExact(end, "yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _) && end != "-")
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("La date de début doit avoir ce format : `yyyy/MM/dd HH:mm`"));
-                return;
-            }
-
-            string date = start;
-            if (start == "-")
-                date = DateTime.Now.AddSeconds(1).ToString("yyyy/MM/dd HH:mm");
-
-            RoleTime mb = new RoleTime(name, start, end, user.Id.ToString(), role.Id.ToString(), date, ctx.Guild.Id.ToString(), ctx.Channel.Id.ToString());
-
-            await ChronoSystem.RegisterChronoInstruction(mb, ctx.Interaction);
-
+            /// Mise à jour dans le RoleDelayerService
+            RoleDelayerService.UpdateDelayedRole(r, ctx.Client);
 
         }
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
+        [SlashCommand("delayed-role-list", "Permet d'afficher la liste des rôles temporaires programmés ! (admin)")]
+        public async Task ListDelayedRole(InteractionContext ctx)
+        {
+
+            DelayedRole[] rs = DelayedRole.FindByGuild((long)ctx.Guild.Id);
+
+            string desc = "";
+
+            if (rs.Length == 0) desc = "Il n'y a pas de rôle temporaire programmé pour le moment...";
+
+            for (int i = 0; i < rs.Length; i++)
+            {
+                desc += $"```{rs[i].name}```\n";
+            }
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "List des rôles temporaires :",
+                Color = DiscordColor.Gray,
+                Description = desc,
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.User.AvatarUrl,
+                    Text = "Role Delayer System 2.0",
+                },
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
+
+        }
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
+        [SlashCommand("delayed-role-delete", "Permet de supprimer un rôle temporaire programmé ! (admin)")]
+        public async Task DeleteDelayedRole(InteractionContext ctx, [Option("Nom", "Nom du role temporaire")] string name)
+        {
+
+            DelayedRole? r = DelayedRole.FindByName(name);
+
+            if (r == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le rôle temporaire ```{name}``` n'existe pas !"));
+            }
+            else
+            {
+
+                r.Delete();
+
+                /// Mise à jour dans le RoleDelayerService
+                RoleDelayerService.DeleteDelayedRole(r);
+
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le rôle temporaire ```{name}``` a été supprimé !"));
+            }
+
+        }
+
+        [SlashRequireGuild]
+        [SlashRequireAdmin]
+        [SlashCommand("delayed-role-info", "Permet d'afficher les détails d'un rôle temporaire programmé ! (admin)")]
+        public async Task InfoDelayedRole(InteractionContext ctx, [Option("Nom", "Nom du role temporaire")] string name)
+        {
+
+            DelayedRole? r = DelayedRole.FindByName(name);
+
+            if (r == null)
+            {
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le rôle temporaire ```{name}``` n'existe pas !"));
+                return;
+            }
+            
+            DiscordUser? user = await ctx.Interaction.Guild.GetMemberAsync((ulong)r.targetId);
+            string username = user?.Mention ?? "Inconnu";
+
+            DiscordRole? role = ctx.Interaction.Guild.GetRole((ulong)r.roleId);
+            string rolename = role?.Mention ?? "Inconnu";
+
+
+            var message = new DiscordEmbedBuilder
+            {
+                Title = "Détails du rôle temporaire :",
+                Color = DiscordColor.Gray,
+                Description = $"Utilisateur cible : {username}" +
+                                $"\nRôle : {rolename}" +
+                                $"\nDate de début : {r.date_start.ToString("yyyy/MM/dd HH:mm")}" +
+                                $"\nDate de fin : {r.date_end.ToString("yyyy/MM/dd HH:mm")}",
+
+                Footer = new DiscordEmbedBuilder.EmbedFooter
+                {
+                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                    Text = "Role Delayer System 2.0",
+                },
+            };
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
+
+        }
+
 
 
 
