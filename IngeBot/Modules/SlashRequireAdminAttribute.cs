@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.SlashCommands;
+using IngeBot.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,12 @@ namespace IngeBot.Modules
 
         public override Task<bool> ExecuteChecksAsync(InteractionContext ctx)
         {
-            return Task.FromResult(ctx.User.Username == "discretos" || Stats.ContainsRole(ctx.Member, Stats.adminRole));
+
+            ulong id = 0;
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.ADMIN_ROLE);
+            if (param != null && param.value != "") id = ulong.Parse(param.value);
+
+            return Task.FromResult(ctx.User.Username == "discretos" || ctx.Guild.OwnerId == ctx.User.Id || ctx.User.Id == id);
         }
     }
 }

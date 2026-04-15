@@ -23,6 +23,7 @@ namespace IngeBot.Models
         public const string LOG_CHANNEL = "LOG_CHANNEL";
         public const string WELCOME_CHANNEL = "WELCOME_CHANNEL";
         public const string MODERATION = "MODERATION";
+        public const string ADMIN_ROLE = "ADMIN_ROLE";
 
 
         public override string GetTableName() => "parameters";

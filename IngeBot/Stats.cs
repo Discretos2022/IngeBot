@@ -20,7 +20,7 @@ namespace IngeBot
         public static string user = "";
         public static string date = "";
 
-        public static string version = "1.1.5.3";
+        public static string version = "1.1.6";
 
         public static Stopwatch sw = new Stopwatch();
 
@@ -68,7 +68,10 @@ namespace IngeBot
                 " \n /addword : Ajouter un mot pour le pendu" +
                 " \n /website : Affiche le lien du site de l'association" +
                 " \n /mcstatus : Affiche l'état du serveur Minecraft" +
-                " \n /ticket : Créer un salon avec toi et les staffs";
+                " \n /ticket : Créer un salon avec toi et les staffs" +
+                " \n /birthday-set : Permet de définir son anniversaire" +
+                " \n /birthday-del : Permet de supprimer son anniversaire" +
+                " \n /birthday : Permet d'afficher sa date d'anniversaire";
 
         public static string SlashCommandAdmin = "**La liste des commandes slash admin :**" +
                 " \n /welcome : Message welcome 4.0, sans états." +
@@ -76,12 +79,24 @@ namespace IngeBot
                 " \n /setwelcomechannel : Défini le salon pour les messages de bienvenu" +
                 " \n /grant : Ajoute un rôle à quelqu'un (ne fonctione pas avec un temps)" +
                 " \n /revoke : Enlève un rôle à quelqu'un" +
-                " \n /setbotgame : Défini le jeu auquel le bot joue" +
                 " \n /moderation : Active/Désactive la modération auto" +
                 " \n /config : Affiche les données sauvegardées (log channel, modération, ...)" +
                 " \n /event : Génere le message d'évènement avec une image et du texte" +
                 " \n /roles : Affiche tous les rôles du serveur" +
                 " \n /update : Met à jour le bot avec le repo Github" +
+                " \n /delayed-message-create : Permet de créer un message programmé" +
+                " \n /delayed-message-delete : Permet de supprimer un message programmé" +
+                " \n /delayed-message-info : Permet d'afficher un message programmé" +
+                " \n /delayed-message-list : Affiche la liste des message programmé" +
+                " \n /setrole-2-0 : Permet de programmer un rôle temporaire" +
+                " \n /delayed-role-delete : Supprime un rôle temporaire programmé" +
+                " \n /delayed-role-info : Affiche les infos d'un rôle temporaire programmé" +
+                " \n /delayed-role-list : Affiche la liste des rôles temporaires programmés";
+
+        public static string SlashCommandSuperAdmin = "**La liste des commandes slash super admin :**" +
+                " \n /set-admin-role : Permet de définir le rôle d'admin pour les commandes d'admin" +
+                " \n /reset-admin-role : Permet de réinitiliser le rôle d'admin" +
+                " \n /setbotgame : Défini le jeu auquel le bot joue" +
                 " \n /ip : Affiche l'adresse ip publique du serveur du bot";
 
         public static string NativeCommandBasic = "**La liste des commandes natives :**" +

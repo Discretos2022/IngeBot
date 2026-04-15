@@ -82,8 +82,8 @@ namespace IngeBot.Models
             if (date_start != DateTime.MinValue)
             {
                 await target.GrantRoleAsync(role);
-                await MessageHelper.Log(guild, $"Le role {role.Mention} a été donné automatiquement à {target.Mention} !");
-                await target.SendMessageAsync($"Le role {role.Mention} t'a été donné automatiquement par IngéBot™ !");
+                await MessageHelper.Log(guild, $"Le rôle {role.Mention} a été donné automatiquement à {target.Mention} !");
+                await target.SendMessageAsync($"Le rôle {role.Mention} t'a été donné automatiquement par IngéBot™ !");
 
                 date_start = DateTime.MinValue;
                 Save();
@@ -92,8 +92,8 @@ namespace IngeBot.Models
             else if (date_end != DateTime.MinValue)
             {
                 await target.RevokeRoleAsync(role);
-                await MessageHelper.Log(guild, $"Le role {role.Mention} a été enlevé automatiquement à {target.Mention} !");
-                await target.SendMessageAsync($"Le role {role.Mention} t'a été supprimé automatiquement par IngéBot™ !");
+                await MessageHelper.Log(guild, $"Le rôle {role.Mention} a été enlevé automatiquement à {target.Mention} !");
+                await target.SendMessageAsync($"Le rôle {role.Mention} t'a été supprimé automatiquement par IngéBot™ !");
 
                 Delete();
             }
@@ -105,7 +105,7 @@ namespace IngeBot.Models
 
         public static DelayedRole[] FindNext()
         {
-            return FindWhere("start", "<", $"\'{DateTime.Now.AddMinutes(40)}\'", "OR", "end", "<", $"\'{DateTime.Now.AddMinutes(40)}\'");
+            return FindWhere("date_start", "<", $"\'{DateTime.Now.AddMinutes(40)}\'", "OR", "date_end", "<", $"\'{DateTime.Now.AddMinutes(40)}\'");
         }
 
         public static DelayedRole[] FindByGuild(long guildId)

@@ -1,7 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
@@ -10,7 +8,6 @@ using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using DSharpPlus.SlashCommands.EventArgs;
 using DSharpPlus.VoiceNext;
-using IngeBot.DelayerEngine;
 using IngeBot.Models;
 using IngeBot.Modules;
 using IngeBot.Services;
@@ -26,8 +23,6 @@ namespace IngeBot
         private static DiscordClient client;
 
         public static DiscordRestClient restClient;
-
-        private Thread statusThread;
 
         static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
 
@@ -47,22 +42,6 @@ namespace IngeBot
             DatabaseSystem.Init(config.DataBaseHost, config.DataBasePort, config.DataBaseUsername, config.DataBasePassword, config.DataBaseName);
 
             Stats.PenduDataDataPath = config.DataPath;
-
-
-            //DelayedMessage? m = DelayedMessage.FindById(3);
-            //m?.Delete();
-
-            //DelayedMessage m1 = new DelayedMessage(1010, 1010, 1010, "test", "text", DateTime.Now, false, true);
-            //DelayedMessage m2 = new DelayedMessage(1010, 1010, 1010, "test", "text", DateTime.Now, false, true);
-            //DelayedMessage m3 = new DelayedMessage(1010, 1010, 1010, "test", "text", DateTime.Now, false, true);
-            //DelayedMessage m4 = new DelayedMessage(1010, 1010, 1010, "test", "text", DateTime.Now, false, true);
-
-            //m1.Save();
-            //m2.Save();
-            //m3.Save();
-            //m4.Save();
-
-
 
             var discordConfig = new DiscordConfiguration()
             {
@@ -123,9 +102,6 @@ namespace IngeBot
                 Console.WriteLine("Discord Connection Has Failed !");
                 Environment.Exit(1);
             }
-
-            //statusThread = new Thread(() => UpdateStatusLoop());
-            //statusThread.Start();
 
             restClient = new DiscordRestClient(discordConfig);
 
@@ -819,7 +795,8 @@ namespace IngeBot
 
         private static async Task AfterGuildsLoading(DiscordClient sender, GuildDownloadCompletedEventArgs e)
         {
-            // _ = DelayerService.Run(sender);
+            _ = MessageDelayerService.Run(sender);
+            _ = RoleDelayerService.Run(sender);
         }
 
         private async Task SlashCommandErroredHandler(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
@@ -835,12 +812,17 @@ namespace IngeBot
 
                 else if (failedCheck is SlashRequireAdminAttribute)
                 {
-                    await e.Context.CreateResponseAsync($"Tu n'as pas la permission pour lancer la commande `/{e.Context.CommandName}`");
+                    await e.Context.CreateResponseAsync($"Tu n'as pas la permission pour lancer la commande `/{e.Context.CommandName}` !");
                 }
 
                 else if (failedCheck is SlashRequireDiscAttribute)
                 {
-                    await e.Context.CreateResponseAsync($"Seul le grand 𝕯𝖎𝖘𝖈𝖗𝖊𝖙𝖔𝖘 peut lancer la commande `/{e.Context.CommandName}`");
+                    await e.Context.CreateResponseAsync($"Seul le grand 𝕯𝖎𝖘𝖈𝖗𝖊𝖙𝖔𝖘 peut lancer la commande `/{e.Context.CommandName}` !");
+                }
+
+                else if (failedCheck is SlashRequireSuperAdminAttribute)
+                {
+                    await e.Context.CreateResponseAsync($"Il faut être soit le créateur du serveur soit 𝕯𝖎𝖘𝖈𝖗𝖊𝖙𝖔𝖘 pour lancer la commande `/{e.Context.CommandName}` !");
                 }
 
             }

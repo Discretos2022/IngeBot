@@ -155,27 +155,12 @@ namespace IngeBot.Modules
         }
 
 
-        [SlashRequireGuild]
-        [SlashRequireDisc]
+        [SlashRequireSuperAdmin]
         [SlashCommand("setbotgame", "Une commande pour le jeu auquel le bot joue. (admin)")]
         public async Task SetBotGame(InteractionContext ctx)
         {
-
-            if (ctx.Guild == null)
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Cette commande doit être éxécuté sur un serveur !"));
-                return;
-            }
-
-            if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole))
-            {
-                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Tu n'es pas autorisé à utiliser cette commande !"));
-                return;
-            }
-
             var modal = new DiscordInteractionResponseBuilder().WithTitle("Set Bot Game").WithCustomId("modal_bot_game").AddComponents(new TextInputComponent("Nom du jeu : ", "id", "Entre Le nom d'un jeu"));
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
-
         }
 
         [SlashRequireGuild]
@@ -542,6 +527,10 @@ namespace IngeBot.Modules
         public async Task Help(InteractionContext ctx)
         {
 
+            ulong id = 0;
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.ADMIN_ROLE);
+            if (param != null && param.value != "") id = ulong.Parse(param.value); 
+
             DiscordEmbedBuilder message = null;
 
             if (ctx.Guild == null)
@@ -556,7 +545,7 @@ namespace IngeBot.Modules
 
                 };
             }
-            else if (ctx.User.Username != "discretos" && !Stats.ContainsRole(ctx.Member, Stats.adminRole)) // && !Stats.ContainsRole(ctx.Member, Stats.adminRole)
+            else if (ctx.User.Username == "discretos" || ctx.Guild.OwnerId == ctx.User.Id)
             {
                 message = new DiscordEmbedBuilder
                 {
@@ -564,11 +553,15 @@ namespace IngeBot.Modules
                     Color = DiscordColor.Gray,
                     Description = Stats.SlashCommandBase +
                                 " \n " +
+                                " \n " + Stats.SlashCommandAdmin +
+                                " \n " +
+                                " \n " + Stats.SlashCommandSuperAdmin +
+                                " \n " +
                                 " \n " + Stats.NativeCommandBasic
 
                 };
             }
-            else
+            else if (ctx.User.Id == id)
             {
                 message = new DiscordEmbedBuilder
                 {
@@ -582,6 +575,19 @@ namespace IngeBot.Modules
 
                 };
             }
+            else
+            {
+                message = new DiscordEmbedBuilder
+                {
+                    Title = "/help !",
+                    Color = DiscordColor.Gray,
+                    Description = Stats.SlashCommandBase +
+                                " \n " +
+                                " \n " + Stats.NativeCommandBasic
+
+                };
+            }
+            
 
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message));
@@ -1495,7 +1501,34 @@ namespace IngeBot.Modules
         }
 
 
+        [SlashRequireGuild]
+        [SlashRequireSuperAdmin]
+        [SlashCommand("set-admin-role", "Permet de définir le rôle qui a le droit de lancer les commandes d'admin ! (super admin)")]
+        public async Task SetAdminRole(InteractionContext ctx, [Option("Rôle", "Le rôle")] DiscordRole role)
+        {
 
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.ADMIN_ROLE);
+            if (param == null) param = new Parameter((long)ctx.Guild.Id, Parameter.ADMIN_ROLE, "");
+
+            param.value = role.Id.ToString();
+            param.Save();
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le role d'admin a été defini sur : {role.Mention}\nToute personne ayant ce role pourra lancer les commandes d'admin !"));
+        }
+
+        [SlashRequireGuild]
+        [SlashRequireSuperAdmin]
+        [SlashCommand("reset-admin-role", "Permet de réinitiliser le rôle qui a le droit de lancer les commandes d'admin ! (super admin)")]
+        public async Task ResetAdminRole(InteractionContext ctx)
+        {
+
+            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.ADMIN_ROLE);
+            if (param == null) param = new Parameter((long)ctx.Guild.Id, Parameter.ADMIN_ROLE, "");
+
+            param.Delete();
+
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le role d'admin a été réinitialisé !"));
+        }
 
         //[SlashCommand("sendto", "Une commande pour envoyer un message incognito. héhéhé !")]
         //public async Task SendMessTo(InteractionContext ctx, [Option("User", "Destinataire")] DiscordUser u, [Option("Message", "Message à envoyer")] string m)
