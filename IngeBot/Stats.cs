@@ -1,10 +1,6 @@
 ﻿using DSharpPlus.Entities;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 
 namespace IngeBot
 {
@@ -71,7 +67,8 @@ namespace IngeBot
                 " \n /ticket : Créer un salon avec toi et les staffs" +
                 " \n /birthday-set : Permet de définir son anniversaire" +
                 " \n /birthday-del : Permet de supprimer son anniversaire" +
-                " \n /birthday : Permet d'afficher sa date d'anniversaire";
+                " \n /birthday : Permet d'afficher sa date d'anniversaire" +
+                " \n /ingedoc : Affiche l'url de la documentation de IngéBot !";
 
         public static string SlashCommandAdmin = "**La liste des commandes slash admin :**" +
                 " \n /welcome : Message welcome 4.0, sans états." +

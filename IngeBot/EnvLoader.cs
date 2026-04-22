@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace IngeBot
 {
@@ -31,14 +28,40 @@ namespace IngeBot
         public static Configuration LoadEnv()
         {
 
-            /// /bin/<dist>/ingebot
-            /// /config/ingebot.config
-            /// /data/
-            string configPath = "../../config/ingebot.config";
+            string configPath = "";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+#if DEBUG
+                configPath = "/var/opt/IngeBot-Beta/ingebot.config";
+#else
+                configPath = "/var/opt/IngeBot/ingebot.config";
+#endif
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                configPath = "../../config/ingebot.config"; // Dev
+            }
+
 
             if (!File.Exists(configPath))
             {
                 Console.WriteLine("404 Error : Base Config File Not Found !");
+
+                Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
+
+                var content =
+                    @"DATA_PATH=
+                    DISCORD_TOKEN=
+
+                    DATABASE_HOST=
+                    DATABASE_PORT=
+                    DATABASE_USERNAME=
+                    DATABASE_PASSWORD=
+                    DATABASE_NAME=";
+
+                File.WriteAllText(configPath, content);
+
+                Console.WriteLine($"Config File Was Generated In {configPath} !");
                 Environment.Exit(1);
             }
 

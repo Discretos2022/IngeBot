@@ -31,9 +31,9 @@ namespace IngeBot
 
 
             if (IntPtr.Size == 8)
-                Console.WriteLine("IngéBot " + Stats.version + " x64 (c) 2024 Joshua Siedel");
+                Console.WriteLine("IngéBot " + Stats.version + " x64 (c) 2024-2026 Joshua Siedel");
             else if (IntPtr.Size == 4)
-                Console.WriteLine("IngéBot " + Stats.version + " x86 (c) 2024 Joshua Siedel");
+                Console.WriteLine("IngéBot " + Stats.version + " x86 (c) 2024-2026 Joshua Siedel");
 
 
             Configuration config = EnvLoader.LoadEnv();
@@ -371,124 +371,8 @@ namespace IngeBot
 
             bool welcomeEph = true;
 
-            if (e.Interaction.Data.CustomId == "game_jam")
-            {
-
-                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1160611550063767683)))
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1160611550063767683));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle " + e.Guild.GetRole(1160611550063767683).Mention + " vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant la Game Jam !").AsEphemeral(welcomeEph));
-                }
-                else
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1160611550063767683));
-
-                    var t = new DiscordEmbedBuilder.EmbedFooter
-                    {
-                        IconUrl = e.Message.Author.AvatarUrl,
-                        Text = "https://forms.office.com/e/T7zPcwnHNd"
-                    };
-
-                    var lien = new DiscordEmbedBuilder
-                    {
-                        Color = DiscordColor.SpringGreen,
-                        Title = "**Pré-inscription Game Jam**",
-                        Description = "Pour compter comme inscrit pour la gamejam, inscrivez-vous sur ce formulaire. " +
-                        "\n (Ceci est la pré-inscription, nous reviendrons vers vous pour une inscription officielle)",
-                        Timestamp = DateTime.Now,
-                        Url = "https://forms.office.com/e/T7zPcwnHNd",
-                        Footer = t,
-                    };
-
-
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle " + e.Guild.GetRole(1160611550063767683).Mention + " vous à été conféré ! Tu as désormais accès aux salons concernant la Game Jam !").AddEmbed(lien).AsEphemeral(welcomeEph));
-                }
-
-            }
-
-            else if (e.Interaction.Data.CustomId == "warhammer")
-            {
-
-                /*if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156946871571456040)))
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156946871571456040));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Warhammer vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant l'événement sur Warhammer !").AsEphemeral(welcomeEph));
-                }
-                else
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156946871571456040));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @Warhammer vous à été conféré ! Tu as désormais accès aux salons concernant l'événement sur Warhammer !").AsEphemeral(welcomeEph));
-                }*/
-
-
-                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Accepte d'abord les règles avant d'appuyer sur ces boutons !").AsEphemeral(true));
-                else
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("L'événement n'est pas encore totalement prêt ! (Le rôle n'existe pas encore)").AsEphemeral(welcomeEph));
-
-            }
-
-            else if (e.Interaction.Data.CustomId == "jeudi_soir")
-            {
-
-                if (!e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1354869344370163952)))
-                {
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Accepte d'abord les règles avant d'appuyer sur ces boutons !").AsEphemeral(true));
-                    return;
-                }
-
-
-                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1167037183861989428)))
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1167037183861989428));
-                else
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1167037183861989428));
-
-                DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "jeu_soc", "Jeux de société", false);
-                DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeu_vid", "Jeux Vidéo", false);
-
-                var message = new DiscordEmbedBuilder
-                {
-                    Title = "Pour quel type de jeux ?",
-                    Color = DiscordColor.Violet,
-                };
-
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2).AsEphemeral(welcomeEph));
-
-            }
-
-            else if (e.Interaction.Data.CustomId == "jeu_soc")
-            {
-
-                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156946871571456040)))
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156946871571456040));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux de société !").AsEphemeral(welcomeEph));
-                }
-                else
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156946871571456040));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-société vous à été conféré ! Tu as désormais accès aux salons concernant les jeux de société !").AsEphemeral(welcomeEph));
-                }
-
-            }
-
-            else if (e.Interaction.Data.CustomId == "jeu_vid")
-            {
-
-                if (e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.Roles.Contains(e.Guild.GetRole(1156942741389987870)))
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.RevokeRoleAsync(e.Guild.GetRole(1156942741389987870));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été enlevé ! Tu n'as désormais plus accès aux salons concernant les jeux vidéo !").AsEphemeral(welcomeEph));
-                }
-                else
-                {
-                    await e.Guild.GetMemberAsync(e.Interaction.User.Id).Result.GrantRoleAsync(e.Guild.GetRole(1156942741389987870));
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Le rôle @jeux-vidéo vous à été conféré ! Tu as désormais accès aux salons concernant les jeux vidéo !").AsEphemeral(welcomeEph));
-                }
-
-            }
-
-            else if (e.Interaction.Data.CustomId == "accept_rules")
+            
+            if (e.Interaction.Data.CustomId == "accept_rules")
             {
                 await c.SendMessageAsync("Tu as accepté les règles ! Sage décision !");
 
@@ -511,21 +395,8 @@ namespace IngeBot
 
             else if (e.Interaction.Data.CustomId == "hes_yes" || e.Interaction.Data.CustomId == "hes_no")
             {
-                /*DiscordButtonComponent b1 = new DiscordButtonComponent(ButtonStyle.Primary, "game_jam", "Game Jam", false);
-                DiscordButtonComponent b2 = new DiscordButtonComponent(ButtonStyle.Primary, "jeudi_soir", "Jeudi Soir", false);
-                DiscordButtonComponent b100 = new DiscordButtonComponent(ButtonStyle.Primary, "???", "???", true);
-
-                var message = new DiscordEmbedBuilder
-                {
-                    Title = "Bienvenu sur le serveur Discord d'IngéGamEZ !",
-                    Color = DiscordColor.Violet,
-                    Description = "Pourquoi êtes-tu ici ?",
-                };*/
-
-                //await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(message).AddComponents(b1, b2, b100).AsEphemeral(welcomeEph));
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Et bien, bienvenu, voyageur !").AsEphemeral(welcomeEph));
             }
-
 
             else if (e.Interaction.Data.CustomId == "no_accept_rules")
             {

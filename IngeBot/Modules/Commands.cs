@@ -5,10 +5,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using DSharpPlus.VoiceNext;
-using IngeBot;
-using IngeBot.DelayerEngine;
 using IngeBot.Models;
-using IngeBot.Models.System;
 using IngeBot.Services;
 using System.Diagnostics;
 using System.Globalization;
@@ -1043,7 +1040,6 @@ namespace IngeBot.Modules
                 await MessageHelper.Log(ctx.Guild, "L'utilisateur " + ctx.User.Username + " a utilisé la commande /welcome [`" + builder + "`]");
 
 
-
                 string[] split = builder.Split("/");
 
                 DiscordButtonComponent[] buttons = new DiscordButtonComponent[split.Length];
@@ -1325,7 +1321,7 @@ namespace IngeBot.Modules
 
         [SlashRequireGuild]
         [SlashRequireAdmin]
-        [SlashCommand("setrole-2-0", "Permet de donner un rôle temporaire à un membre du serveur ! (admin)")]
+        [SlashCommand("delayed-role-set", "Permet de donner un rôle temporaire à un membre du serveur ! (admin)")]
         public async Task SetRole(InteractionContext ctx, [Option("Nom", "Permet, après, de le supprimer à partir de son nom.")] string name, [Option("Utilisateur", "L'utilisateur")] DiscordUser user, [Option("Rôle", "Le rôle")] DiscordRole role, [Option("Début", "Format : 2025/01/01 10:00 ou -")] string start, [Option("Fin", "Format : 2025/01/01 10:00 ou -")] string end)
         {
 
@@ -1529,6 +1525,15 @@ namespace IngeBot.Modules
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Le role d'admin a été réinitialisé !"));
         }
+
+
+
+        [SlashCommand("ingedoc", "Affiche l'url de la documentation de IngéBot !")]
+        public async Task GetIngeDocUrl(InteractionContext ctx)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("https://discsystem.duckdns.org/ingedoc/"));
+        }
+
 
         //[SlashCommand("sendto", "Une commande pour envoyer un message incognito. héhéhé !")]
         //public async Task SendMessTo(InteractionContext ctx, [Option("User", "Destinataire")] DiscordUser u, [Option("Message", "Message à envoyer")] string m)
