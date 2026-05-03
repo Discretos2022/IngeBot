@@ -24,6 +24,8 @@ namespace IngeBot
 
         public static DiscordRestClient restClient;
 
+        public static Configuration config;
+
         static void Main(string[] args) => new Program().RunBotAsync().GetAwaiter().GetResult();
 
         public async Task RunBotAsync()
@@ -36,7 +38,7 @@ namespace IngeBot
                 Console.WriteLine("IngéBot " + Stats.version + " x86 (c) 2024-2026 Joshua Siedel");
 
 
-            Configuration config = EnvLoader.LoadEnv();
+            config = EnvLoader.LoadEnv();
             Console.WriteLine("Config File Loaded !");
 
             DatabaseSystem.Init(config.DataBaseHost, config.DataBasePort, config.DataBaseUsername, config.DataBasePassword, config.DataBaseName);
@@ -702,14 +704,14 @@ namespace IngeBot
 
         private async Task SocketClosedHandler(DiscordClient sender, SocketCloseEventArgs args)
         {
-            Console.WriteLine("Socket Closed : Restart...");
-            Environment.Exit(0);
+            // Console.WriteLine("Socket Closed : Restart...");
+            // Environment.Exit(1);
         }
 
         private async Task SocketErroredHandler(DiscordClient sender, SocketErrorEventArgs args)
         {
-            Console.WriteLine("Socket Error : Restart...");
-            Environment.Exit(0);
+            // Console.WriteLine("Socket Error : Restart...");
+            // Environment.Exit(1);
         }
 
         private async Task ZombiedHandler(DiscordClient sender, ZombiedEventArgs args)

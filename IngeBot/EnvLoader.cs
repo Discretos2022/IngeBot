@@ -10,8 +10,10 @@ namespace IngeBot
         public Configuration() { }
 
 
-        public string DataPath = "";
         public string DiscordToken = "";
+        public string DataPath = "";
+        public string PythonPath = "";
+        public string MCStatucPath = "";
 
         public string DataBaseHost = "";
         public string DataBasePort = "";
@@ -50,14 +52,16 @@ namespace IngeBot
                 Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
 
                 var content =
-                    @"DATA_PATH=
-                    DISCORD_TOKEN=
+@"DISCORD_TOKEN=
+DATA_PATH=
+PYTHON_PATH=
+MCSTATUS_PATH=
 
-                    DATABASE_HOST=
-                    DATABASE_PORT=
-                    DATABASE_USERNAME=
-                    DATABASE_PASSWORD=
-                    DATABASE_NAME=";
+DATABASE_HOST=
+DATABASE_PORT=
+DATABASE_USERNAME=
+DATABASE_PASSWORD=
+DATABASE_NAME=";
 
                 File.WriteAllText(configPath, content);
 
@@ -87,8 +91,10 @@ namespace IngeBot
                 switch (key)
                 {
 
-                    case "DATA_PATH": configuration.DataPath = value; continue;
                     case "DISCORD_TOKEN": configuration.DiscordToken = value; continue;
+                    case "DATA_PATH": configuration.DataPath = value; continue;
+                    case "PYTHON_PATH": configuration.PythonPath = value; continue;
+                    case "MCSTATUS_PATH": configuration.MCStatucPath = value; continue;
 
                     case "DATABASE_HOST": configuration.DataBaseHost = value; continue;
                     case "DATABASE_PORT": configuration.DataBasePort = value; continue;

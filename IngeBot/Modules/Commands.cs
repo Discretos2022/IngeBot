@@ -56,7 +56,7 @@ namespace IngeBot.Modules
                 Color = DiscordColor.Yellow,
                 Title = "Information : ",
                 Description = "`IngéBot ver " + Stats.version +
-                "\nCopyright (c) 2024-2025 SIEDEL Joshua" +
+                "\nCopyright (c) 2024-2026 SIEDEL Joshua" +
                 "\nIP : Tu croyais que j'allais vraiment mettre l'adresse ip ! X)`",
 
             };
@@ -732,10 +732,11 @@ namespace IngeBot.Modules
 
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Ping..."));
 
-            string fileName = Token.MC_STATUS_PATH;
+            string fileName = Program.config.MCStatucPath;
+            string pythonPath = Program.config.PythonPath;
 
             Process p = new Process();
-            p.StartInfo = new ProcessStartInfo(Token.PYTHON_PATH, fileName)
+            p.StartInfo = new ProcessStartInfo(pythonPath, fileName)
             {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
