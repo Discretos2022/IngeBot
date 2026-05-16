@@ -439,6 +439,8 @@ namespace IngeBot.Modules
         public async Task GetSaveInfo(InteractionContext ctx)
         {
 
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données..."));
+
             Parameter? logChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.LOG_CHANNEL);
             string logChannel = logChannelParam?.value ?? "";
             logChannel = ctx.Guild.GetChannel(ulong.Parse(logChannel))?.Mention ?? "-";

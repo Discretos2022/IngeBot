@@ -31,7 +31,8 @@ namespace IngeBot
 
         public static int ExecuteInsert(string request, params (string, object)[] args)
         {
-            NpgsqlConnection connection = GetConnection();
+
+            using NpgsqlConnection connection = GetConnection();
             NpgsqlCommand cmd = new NpgsqlCommand(request, connection);
 
             foreach (var (name, value) in args)
@@ -42,11 +43,12 @@ namespace IngeBot
 
             if (result == null) return -1;
             return (int)result;
+
         }
 
         public static int ExecuteDelete(string request, int id)
         {
-            NpgsqlConnection connection = GetConnection();
+            using NpgsqlConnection connection = GetConnection();
             NpgsqlCommand cmd = new NpgsqlCommand(request, connection);
 
             cmd.Parameters.AddWithValue("@id", id);

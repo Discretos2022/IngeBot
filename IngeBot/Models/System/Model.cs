@@ -77,7 +77,7 @@ namespace IngeBot.Models.System
             T? instance = (T?)Activator.CreateInstance(typeof(T), nonPublic: true);
             if (instance == null) return default;
 
-            NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE id = '{id}';");
+            using NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE id = '{id}';");
             if (reader == null || !reader.Read()) return default;
 
             foreach (var prop in typeof(T).GetFields())
@@ -97,7 +97,7 @@ namespace IngeBot.Models.System
 
             string where = string.Join(" ", args);
 
-            NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE {where};");
+            using NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE {where};");
             if (reader == null || !reader.Read()) return default;
 
             foreach (var prop in typeof(T).GetFields())
@@ -120,7 +120,7 @@ namespace IngeBot.Models.System
 
             string where = string.Join(" ", args);
 
-            NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE {where};");
+            using NpgsqlDataReader reader = DatabaseSystem.ExecuteSelect($"SELECT * FROM {instance.GetTableName()} WHERE {where};");
             if (reader == null) return Array.Empty<T>();
 
 
