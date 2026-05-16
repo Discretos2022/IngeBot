@@ -1537,6 +1537,12 @@ namespace IngeBot.Modules
             await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("https://discsystem.duckdns.org/ingedoc/"));
         }
 
+        [SlashCommand("github", "Affiche l'url du repository de IngéBot sur Github !")]
+        public async Task GetRepoUrl(InteractionContext ctx)
+        {
+            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("https://github.com/Discretos2022/IngeBot"));
+        }
+
 
         //[SlashCommand("sendto", "Une commande pour envoyer un message incognito. héhéhé !")]
         //public async Task SendMessTo(InteractionContext ctx, [Option("User", "Destinataire")] DiscordUser u, [Option("Message", "Message à envoyer")] string m)
