@@ -438,39 +438,47 @@ namespace IngeBot.Modules
         [SlashCommand("config", "Une commande pour afficher les données sauvegardées. (admin)")]
         public async Task GetSaveInfo(InteractionContext ctx)
         {
-
-            await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données..."));
-
-            Parameter? logChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.LOG_CHANNEL);
-            string logChannel = logChannelParam?.value ?? "";
-            logChannel = ctx.Guild.GetChannel(ulong.Parse(logChannel))?.Mention ?? "-";
-
-            Parameter? welcomeChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.WELCOME_CHANNEL);
-            string welcomeChannel = welcomeChannelParam?.value ?? "";
-            welcomeChannel = ctx.Guild.GetChannel(ulong.Parse(welcomeChannel))?.Mention ?? "-";
-
-            Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.MODERATION);
-            string moderationParam = param?.value ?? "false";
-            bool moderation = bool.Parse(moderationParam == "true" || moderationParam == "false" ? moderationParam : "false");
-
-            var m = new DiscordEmbedBuilder
+                await ctx.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Recherche des données..."));
+            try
             {
-                Title = "Données sauvegardées par IngéBot",
-                Color = DiscordColor.Gray,
-                Description = ""
-            };
 
-            m.Description += "**Channel : **";
-            m.Description += "\n";
-            m.Description += "Log Channel : " + logChannel;
-            m.Description += "\n";
-            m.Description += "Welcome Channel : " + welcomeChannel;
-            m.Description += "\n\n";
-            m.Description += "**Modération : **";
-            m.Description += "\n";
-            m.Description += "Modération : " + moderation;
 
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(m));
+                Parameter? logChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.LOG_CHANNEL);
+                string logChannel = logChannelParam?.value ?? "0";
+                logChannel = ctx.Guild.GetChannel(ulong.Parse(logChannel))?.Mention ?? "-";
+
+                Parameter? welcomeChannelParam = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.WELCOME_CHANNEL);
+                string welcomeChannel = welcomeChannelParam?.value ?? "0";
+                welcomeChannel = ctx.Guild.GetChannel(ulong.Parse(welcomeChannel))?.Mention ?? "-";
+
+                Parameter? param = Parameter.FindByGuildIdAndKey(ctx.Guild.Id, Parameter.MODERATION);
+                string moderationParam = param?.value ?? "false";
+                bool moderation = bool.Parse(moderationParam == "true" || moderationParam == "false" ? moderationParam : "false");
+
+                var m = new DiscordEmbedBuilder
+                {
+                    Title = "Données sauvegardées par IngéBot",
+                    Color = DiscordColor.Gray,
+                    Description = ""
+                };
+
+                m.Description += "**Channel : **";
+                m.Description += "\n";
+                m.Description += "Log Channel : " + logChannel;
+                m.Description += "\n";
+                m.Description += "Welcome Channel : " + welcomeChannel;
+                m.Description += "\n\n";
+                m.Description += "**Modération : **";
+                m.Description += "\n";
+                m.Description += "Modération : " + moderation;
+
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(m));
+
+            }catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
 
         }
 
